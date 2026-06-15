@@ -1,0 +1,225 @@
+:root {
+  color-scheme: light dark;
+  --font-size: var(--vscode-editor-font-size, 14px);
+  --line-height: 1.6;
+  --source-font-family: var(--vscode-editor-font-family, monospace);
+  --font-sans: var(--vscode-font-family, sans-serif);
+  --content-placeholder: var(--vscode-descriptionForeground);
+  --content-placeholder-dark: var(--vscode-descriptionForeground);
+  --spacing-03: 8px;
+  --spacing-10: 32px;
+  --font-size-02: 13px;
+  --font-size-04: 16px;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  color: var(--vscode-editor-foreground);
+  background: var(--vscode-editor-background);
+  font-family: var(--vscode-font-family);
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+#toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--vscode-panel-border);
+  background: var(--vscode-editor-background);
+}
+
+#toolbar button,
+#toolbar select {
+  min-height: 28px;
+  color: var(--vscode-button-secondaryForeground);
+  background: var(--vscode-button-secondaryBackground);
+  border: 1px solid transparent;
+  border-radius: 3px;
+  padding: 3px 8px;
+}
+
+#toolbar button:hover,
+#toolbar select:hover {
+  background: var(--vscode-button-secondaryHoverBackground);
+}
+
+#toolbar button.active,
+#toolbar button[aria-pressed='true'] {
+  color: var(--vscode-button-foreground);
+  background: var(--vscode-button-background);
+  border-color: var(--vscode-focusBorder);
+}
+
+#toolbar button:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+#toolbar button:focus-visible,
+#toolbar select:focus-visible {
+  outline: 1px solid var(--vscode-focusBorder);
+  outline-offset: 1px;
+}
+
+#editor {
+  flex: 1;
+  min-height: 0;
+}
+
+#editor.restoring-view {
+  visibility: hidden;
+}
+
+.cm-editor,
+.cm-scroller {
+  height: 100%;
+}
+
+.cm-focused {
+  outline: none;
+}
+
+.cm-lineNumbers .cm-gutterElement.latex-visual-current-line-number {
+  color: var(--vscode-editorLineNumber-activeForeground);
+  background: var(
+    --vscode-editor-lineHighlightBackground,
+    var(--vscode-editorGutter-background)
+  );
+  font-weight: 600;
+}
+
+.material-symbols {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1em;
+  font-family: var(--vscode-font-family);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+
+.latex-visual-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--visual-font-family);
+  user-select: none;
+}
+
+.latex-visual-table td {
+  min-width: 60px;
+  padding: 8px;
+  position: relative;
+}
+
+.table-generator-cell-render {
+  min-height: 1.5em;
+  white-space: pre-wrap;
+}
+
+.table-generator-cell-input {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 1.5em;
+  margin: 0;
+  padding: 0;
+  resize: none;
+  overflow: hidden;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  font: inherit;
+  line-height: inherit;
+  text-align: inherit;
+  user-select: text;
+}
+
+.ol-cm-graphics-edit-button {
+  cursor: pointer;
+  color: var(--vscode-button-foreground);
+  background: var(--vscode-button-background);
+  border: 0;
+  border-radius: 3px;
+}
+
+.notification {
+  padding: 12px;
+  border: 1px solid var(--vscode-panel-border);
+  background: var(--vscode-textBlockQuote-background);
+}
+
+.ol-cm-math-error,
+.ol-cm-error {
+  color: var(--vscode-errorForeground);
+}
+
+.latex-figure-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.latex-figure-dialog {
+  display: grid;
+  gap: 12px;
+  width: min(520px, 100%);
+  padding: 20px;
+  color: var(--vscode-editor-foreground);
+  background: var(--vscode-editorWidget-background);
+  border: 1px solid var(--vscode-editorWidget-border);
+  border-radius: 6px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+}
+
+.latex-figure-dialog h2 {
+  margin: 0 0 4px;
+}
+
+.latex-figure-dialog label {
+  display: grid;
+  gap: 5px;
+}
+
+.latex-figure-dialog input {
+  padding: 7px;
+  color: var(--vscode-input-foreground);
+  background: var(--vscode-input-background);
+  border: 1px solid var(--vscode-input-border);
+}
+
+.latex-figure-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.latex-figure-dialog button {
+  padding: 6px 12px;
+  color: var(--vscode-button-foreground);
+  background: var(--vscode-button-background);
+  border: 0;
+  border-radius: 3px;
+}

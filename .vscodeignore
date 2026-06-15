@@ -1,0 +1,10 @@
+.git/**
+.github/**
+src/**
+scripts/**
+test/**
+build/**
+examples/build/**
+node_modules/**
+tsconfig.json
+*.vsix

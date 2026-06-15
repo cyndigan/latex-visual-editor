@@ -1,0 +1,131 @@
+import * as vscode from 'vscode'
+import { getActiveVisualEditor } from './extension/activeVisualEditor'
+import { replaceDocumentEditor } from './extension/editorTabs'
+import {
+  captureTextEditorSelection,
+  getStoredEditorSelection,
+  restoreTextEditorSelection,
+  storeEditorSelection,
+} from './extension/editorSelections'
+import {
+  captureTextEditorViewState,
+  getStoredViewState,
+  restoreTextEditorViewState,
+  storeViewState,
+} from './extension/editorViewState'
+import {
+  LatexVisualEditorProvider,
+  VISUAL_EDITOR_VIEW_TYPE,
+} from './extension/latexVisualEditorProvider'
+
+const MODE_KEY_PREFIX = 'latexVisualEditor.mode.'
+
+/**
+ * Activates commands and the custom text editor.
+ */
+export function activate(context: vscode.ExtensionContext): void {
+  context.subscriptions.push(LatexVisualEditorProvider.register(context))
+
+  const openVisual = async (uri?: vscode.Uri) => {
+    const target = uri ?? vscode.window.activeTextEditor?.document.uri
+    if (!target) return
+    const sourceEditor = vscode.window.activeTextEditor
+    if (sourceEditor?.document.uri.toString() === target.toString()) {
+      storeEditorSelection(target, captureTextEditorSelection(sourceEditor))
+      await storeViewState(
+        context,
+        target,
+        captureTextEditorViewState(sourceEditor)
+      )
+    }
+    await rememberMode(context, target, 'visual')
+    await replaceDocumentEditor(target, VISUAL_EDITOR_VIEW_TYPE)
+  }
+
+  const openSource = async (uri?: vscode.Uri) => {
+    const target = uri ?? vscode.window.activeTextEditor?.document.uri
+    if (!target) return
+    const selection = getStoredEditorSelection(target)
+    const viewState = getStoredViewState(context, target)
+    await rememberMode(context, target, 'source')
+    await replaceDocumentEditor(target, 'default')
+    const sourceEditor = vscode.window.activeTextEditor
+    if (
+      selection &&
+      sourceEditor?.document.uri.toString() === target.toString()
+    ) {
+      restoreTextEditorSelection(sourceEditor, selection)
+    }
+    if (
+      viewState !== undefined &&
+      sourceEditor?.document.uri.toString() === target.toString()
+    ) {
+      restoreTextEditorViewState(sourceEditor, viewState)
+    }
+  }
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('latexVisualEditor.openVisual', openVisual),
+    vscode.commands.registerCommand('latexVisualEditor.openSource', openSource),
+    vscode.commands.registerCommand('latexVisualEditor.toggle', async (uri?: vscode.Uri) => {
+      if (getActiveVisualEditor()) {
+        await openSource(uri)
+      } else {
+        await openVisual(uri)
+      }
+    }),
+    vscode.commands.registerCommand('latexVisualEditor.insertFigure', () => {
+      void getActiveVisualEditor()?.webview.postMessage({
+        type: 'command',
+        command: 'insertFigure',
+      })
+    }),
+    vscode.commands.registerCommand('latexVisualEditor.insertTable', () => {
+      void getActiveVisualEditor()?.webview.postMessage({
+        type: 'command',
+        command: 'insertTable',
+      })
+    })
+  )
+
+  const reopening = new Set<string>()
+  context.subscriptions.push(
+    vscode.window.onDidChangeActiveTextEditor(editor => {
+      if (!editor || editor.document.languageId !== 'latex') return
+      const configuration = vscode.workspace.getConfiguration('latexVisualEditor')
+      if (!configuration.get<boolean>('rememberMode', true)) return
+
+      const key = editor.document.uri.toString()
+      if (
+        context.workspaceState.get<'source' | 'visual'>(MODE_KEY_PREFIX + key) !==
+          'visual' ||
+        reopening.has(key)
+      ) {
+        return
+      }
+
+      reopening.add(key)
+      void Promise.resolve(
+        replaceDocumentEditor(editor.document.uri, VISUAL_EDITOR_VIEW_TYPE)
+      ).finally(() => reopening.delete(key))
+    })
+  )
+}
+
+/**
+ * Persists one file's selected editor mode.
+ */
+async function rememberMode(
+  context: vscode.ExtensionContext,
+  uri: vscode.Uri,
+  mode: 'source' | 'visual'
+): Promise<void> {
+  const configuration = vscode.workspace.getConfiguration('latexVisualEditor')
+  if (!configuration.get<boolean>('rememberMode', true)) return
+  await context.workspaceState.update(MODE_KEY_PREFIX + uri.toString(), mode)
+}
+
+/**
+ * Performs no explicit shutdown work.
+ */
+export function deactivate(): void {}

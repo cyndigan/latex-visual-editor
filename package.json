@@ -1,0 +1,124 @@
+{
+  "name": "latex-visual-editor",
+  "displayName": "LaTeX Visual Editor",
+  "description": "An Overleaf-derived visual LaTeX editor for VS Code.",
+  "version": "0.1.0",
+  "publisher": "local",
+  "license": "AGPL-3.0-only",
+  "engines": {
+    "vscode": "^1.95.0"
+  },
+  "categories": [
+    "Other",
+    "Programming Languages"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "customEditors": [
+      {
+        "viewType": "latexVisualEditor.editor",
+        "displayName": "LaTeX Visual Editor",
+        "selector": [
+          {
+            "filenamePattern": "*.tex"
+          }
+        ],
+        "priority": "option"
+      }
+    ],
+    "commands": [
+      {
+        "command": "latexVisualEditor.toggle",
+        "title": "Toggle Visual Editor",
+        "shortTitle": "Toggle Visual Editor",
+        "icon": "$(eye)"
+      },
+      {
+        "command": "latexVisualEditor.openVisual",
+        "title": "LaTeX: Open Visual Editor"
+      },
+      {
+        "command": "latexVisualEditor.openSource",
+        "title": "LaTeX: Open Source Editor"
+      },
+      {
+        "command": "latexVisualEditor.insertFigure",
+        "title": "LaTeX: Insert Figure"
+      },
+      {
+        "command": "latexVisualEditor.insertTable",
+        "title": "LaTeX: Insert Table"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "latexVisualEditor.toggle",
+          "when": "resourceExtname == .tex",
+          "group": "navigation@20"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "LaTeX Visual Editor",
+      "properties": {
+        "latexVisualEditor.assetsDirectory": {
+          "type": "string",
+          "default": "assets",
+          "description": "Workspace-relative directory used when copying inserted images."
+        },
+        "latexVisualEditor.rememberMode": {
+          "type": "boolean",
+          "default": true,
+          "description": "Remember visual mode separately for each LaTeX file in the workspace."
+        },
+        "latexVisualEditor.maxImagePreviewBytes": {
+          "type": "number",
+          "default": 20971520,
+          "minimum": 1048576,
+          "description": "Maximum image size in bytes that the visual editor previews."
+        },
+        "latexVisualEditor.syntaxValidation": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable syntax-aware visual rendering."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "clean": "node scripts/clean.mjs",
+    "generate:parser": "node scripts/generate-parser.mjs",
+    "build": "npm run generate:parser && node scripts/build.mjs",
+    "watch": "npm run generate:parser && node scripts/build.mjs --watch",
+    "typecheck": "tsc --noEmit",
+    "pretest": "npm run generate:parser",
+    "test": "vitest run",
+    "package": "npm run build && vsce package --no-dependencies"
+  },
+  "dependencies": {
+    "@codemirror/autocomplete": "^6.18.7",
+    "@codemirror/commands": "^6.8.1",
+    "@codemirror/language": "^6.11.3",
+    "@codemirror/search": "^6.5.11",
+    "@codemirror/state": "^6.5.2",
+    "@codemirror/view": "^6.36.5",
+    "@lezer/common": "^1.2.3",
+    "@lezer/highlight": "^1.2.1",
+    "@lezer/lr": "^1.4.2",
+    "@overleaf/o-error": "^3.4.0",
+    "lodash": "^4.17.21",
+    "mathjax": "^4.1.2"
+  },
+  "devDependencies": {
+    "@lezer/generator": "^1.7.3",
+    "@types/lodash": "^4.17.16",
+    "@types/node": "^22.15.3",
+    "@types/vscode": "^1.95.0",
+    "@vscode/vsce": "^3.3.2",
+    "esbuild": "^0.25.3",
+    "jsdom": "^26.1.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.2"
+  }
+}
