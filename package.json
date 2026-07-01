@@ -64,6 +64,12 @@
       {
         "command": "latexVisualEditor.refreshWebviews",
         "title": "LaTeX: Refresh Visual Editor Webviews"
+      },
+      {
+        "command": "latexVisualEditor.viewPdf",
+        "title": "View LaTeX PDF file",
+        "category": "LaTeX Workshop",
+        "icon": "$(open-preview)"
       }
     ],
     "keybindings": [
@@ -86,6 +92,11 @@
           "command": "latexVisualEditor.toggle",
           "when": "resourceExtname == .tex",
           "group": "navigation@20"
+        },
+        {
+          "command": "latexVisualEditor.viewPdf",
+          "when": "activeCustomEditorId == latexVisualEditor.editor && resourceExtname == .tex",
+          "group": "navigation@2"
         }
       ]
     },

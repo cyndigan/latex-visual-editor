@@ -29,6 +29,7 @@ const CURRENT_MODE_KEY = 'latexVisualEditor.currentMode'
  */
 export function activate(context: vscode.ExtensionContext): void {
   const visualEditorProvider = new LatexVisualEditorProvider(context)
+  const reopening = new Set<string>()
   context.subscriptions.push(
     LatexVisualEditorProvider.register(context, visualEditorProvider)
   )
@@ -105,6 +106,22 @@ export function activate(context: vscode.ExtensionContext): void {
       'latexVisualEditor.refreshWebviews',
       refreshWebviews
     ),
+    vscode.commands.registerCommand('latexVisualEditor.viewPdf', async () => {
+      const document = getActiveVisualEditorDocument()
+      if (!document) return
+
+      const target = document.uri
+      const key = target.toString()
+      await visualEditorProvider.syncActiveEditorState(target)
+      reopening.add(key)
+      try {
+        await replaceDocumentEditor(target, 'default')
+        await vscode.commands.executeCommand('latex-workshop.view')
+      } finally {
+        await replaceDocumentEditor(target, VISUAL_EDITOR_VIEW_TYPE)
+        reopening.delete(key)
+      }
+    }),
     vscode.window.registerUriHandler({
       handleUri(uri) {
         if (uri.path === '/refreshWebviews') {
@@ -140,7 +157,6 @@ export function activate(context: vscode.ExtensionContext): void {
     })
   )
 
-  const reopening = new Set<string>()
   context.subscriptions.push(
     vscode.window.onDidChangeActiveTextEditor(editor => {
       if (!editor || editor.document.languageId !== 'latex') return
