@@ -197,6 +197,7 @@
     "test:e2e:shortcuts": "node scripts/test-keyboard-shortcuts.mjs",
     "test:e2e:shortcuts:disabled": "node scripts/test-keyboard-shortcuts.mjs --disabled",
     "test:e2e:latex-workshop-shortcuts": "node scripts/test-latex-workshop-shortcuts.mjs",
+    "test:e2e:visual-auto-build": "node scripts/test-visual-auto-build.mjs",
     "check": "npm run typecheck && npm test",
     "vscode:prepublish": "npm run check && npm run build",
     "package": "vsce package --no-dependencies"

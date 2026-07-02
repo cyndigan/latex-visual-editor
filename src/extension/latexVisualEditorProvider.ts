@@ -21,6 +21,7 @@ import {
   getStoredViewState,
   storeViewState,
 } from './editorViewState'
+import { buildWithLatexWorkshop } from './latexWorkshop'
 import { WorkspaceMetadataIndex } from './workspaceMetadata'
 
 export const VISUAL_EDITOR_VIEW_TYPE = 'latexVisualEditor.editor'
@@ -37,6 +38,7 @@ export class LatexVisualEditorProvider implements vscode.CustomTextEditorProvide
     vscode.TextDocument
   >()
   private readonly pendingStateSnapshots = new Map<string, () => void>()
+  private readonly pendingAutoBuildSaves = new Map<string, NodeJS.Timeout>()
 
   constructor(private readonly context: vscode.ExtensionContext) {}
 
@@ -298,6 +300,8 @@ export class LatexVisualEditorProvider implements vscode.CustomTextEditorProvide
    * Releases cached workspace metadata indexes.
    */
   dispose(): void {
+    this.pendingAutoBuildSaves.forEach(clearTimeout)
+    this.pendingAutoBuildSaves.clear()
     this.metadataIndexes.forEach(index => index.dispose())
     this.metadataIndexes.clear()
   }
@@ -357,7 +361,49 @@ export class LatexVisualEditorProvider implements vscode.CustomTextEditorProvide
     )
     if (!(await vscode.workspace.applyEdit(edit))) {
       await resynchronize()
+      return
     }
+    this.scheduleAutoBuildSave(document)
+  }
+
+  /**
+   * Persists visual edits after an idle period so LaTeX Workshop receives the
+   * same save/file-change event it uses to auto-build source-editor changes.
+   */
+  private scheduleAutoBuildSave(document: vscode.TextDocument): void {
+    const configuration = vscode.workspace.getConfiguration(
+      'latex-workshop',
+      document.uri
+    )
+    if (configuration.get<string>('latex.autoBuild.run', 'never') === 'never') {
+      return
+    }
+    const key = document.uri.toString()
+    const pending = this.pendingAutoBuildSaves.get(key)
+    if (pending) clearTimeout(pending)
+
+    const interval = configuration.get<number>('latex.autoBuild.interval', 1000)
+    const delay = Math.max(300, interval)
+    this.pendingAutoBuildSaves.set(
+      key,
+      setTimeout(() => {
+        this.pendingAutoBuildSaves.delete(key)
+        if (!document.isDirty) return
+        void document.save().then(async saved => {
+          if (!saved) {
+            console.error(
+              `Could not save ${document.fileName} for LaTeX Workshop auto-build.`
+            )
+            return
+          }
+          try {
+            await buildWithLatexWorkshop(document)
+          } catch (error) {
+            console.error('LaTeX Workshop visual auto-build failed.', error)
+          }
+        })
+      }, delay)
+    )
   }
 
   /**
