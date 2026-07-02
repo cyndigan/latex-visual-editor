@@ -184,6 +184,7 @@ export const markDecorations = ViewPlugin.define(
                   case 'table':
                   case 'verbatim':
                   case 'lstlisting':
+                  case 'minted':
                     {
                       const centered = Boolean(
                         centeringNodeForEnvironment(nodeRef)

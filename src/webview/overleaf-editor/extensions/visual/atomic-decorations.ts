@@ -306,6 +306,7 @@ export const atomicDecorations = (options: Options) => {
             'table',
             'verbatim',
             'lstlisting',
+            'minted',
             'quote',
             'quotation',
             'quoting',

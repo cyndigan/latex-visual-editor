@@ -314,15 +314,14 @@ const mainVisualTheme = EditorView.theme({
   '.ol-cm-caption-line .ol-cm-label': {
     marginRight: '1ch',
   },
-  '.ol-cm-environment-verbatim': {
-    fontFamily: 'var(--source-font-family)',
-  },
-  '.ol-cm-environment-lstlisting': {
+  '.ol-cm-environment-verbatim, .ol-cm-environment-lstlisting, .ol-cm-environment-minted':
+    {
     fontFamily: 'var(--source-font-family)',
     fontSize: 'var(--font-size)',
     lineHeight: 1.45,
   },
-  '.ol-cm-environment-lstlisting.ol-cm-environment-line': {
+  '.ol-cm-environment-verbatim.ol-cm-environment-line, .ol-cm-environment-lstlisting.ol-cm-environment-line, .ol-cm-environment-minted.ol-cm-environment-line':
+    {
     boxSizing: 'border-box',
     color: 'var(--vscode-editor-foreground)',
     backgroundColor: 'var(--vscode-textCodeBlock-background)',
@@ -331,19 +330,21 @@ const mainVisualTheme = EditorView.theme({
     paddingLeft: '14px',
     paddingRight: '14px',
   },
-  '.ol-cm-environment-lstlisting.ol-cm-environment-first-line': {
+  '.ol-cm-environment-verbatim.ol-cm-environment-first-line, .ol-cm-environment-lstlisting.ol-cm-environment-first-line, .ol-cm-environment-minted.ol-cm-environment-first-line':
+    {
     paddingTop: '0 !important',
   },
-  '.ol-cm-environment-lstlisting.ol-cm-environment-last-line': {
+  '.ol-cm-environment-verbatim.ol-cm-environment-last-line, .ol-cm-environment-lstlisting.ol-cm-environment-last-line, .ol-cm-environment-minted.ol-cm-environment-last-line':
+    {
     paddingBottom: '0 !important',
   },
-  '.ol-cm-environment-lstlisting.ol-cm-environment-top + .ol-cm-environment-lstlisting.ol-cm-environment-line':
+  '.ol-cm-environment-verbatim.ol-cm-environment-top + .ol-cm-environment-verbatim.ol-cm-environment-line, .ol-cm-environment-lstlisting.ol-cm-environment-top + .ol-cm-environment-lstlisting.ol-cm-environment-line, .ol-cm-environment-minted.ol-cm-environment-top + .ol-cm-environment-minted.ol-cm-environment-line':
     {
       borderTop: '1px solid var(--vscode-panel-border)',
       borderTopLeftRadius: '6px',
       borderTopRightRadius: '6px',
     },
-  '.ol-cm-environment-lstlisting.ol-cm-environment-line:has(+ .ol-cm-environment-lstlisting.ol-cm-environment-bottom)':
+  '.ol-cm-environment-verbatim.ol-cm-environment-line:has(+ .ol-cm-environment-verbatim.ol-cm-environment-bottom), .ol-cm-environment-lstlisting.ol-cm-environment-line:has(+ .ol-cm-environment-lstlisting.ol-cm-environment-bottom), .ol-cm-environment-minted.ol-cm-environment-line:has(+ .ol-cm-environment-minted.ol-cm-environment-bottom)':
     {
       borderBottom: '1px solid var(--vscode-panel-border)',
       borderBottomLeftRadius: '6px',
