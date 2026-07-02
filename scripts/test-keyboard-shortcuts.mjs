@@ -191,6 +191,83 @@ try {
       'Visual-editor copy, formatting, undo, redo, and find shortcuts passed without toggling the VS Code sidebar.'
     )
   }
+
+  const richTextHeading = frame
+    .locator('.cm-line')
+    .filter({ hasText: 'Rich text' })
+    .first()
+  await richTextHeading.click({ force: true })
+  await editor.press('Control+Shift+[')
+  await frame.locator('.cm-foldPlaceholder').first().waitFor({
+    state: 'visible',
+    timeout: 10_000,
+  })
+  await editor.press('Control+Shift+]')
+  await frame.locator('.cm-foldPlaceholder').first().waitFor({
+    state: 'detached',
+    timeout: 10_000,
+  })
+
+  await editor.press('Control+K')
+  await editor.press('Control+0')
+  await frame.locator('.cm-foldPlaceholder').first().waitFor({
+    state: 'visible',
+    timeout: 10_000,
+  })
+  await editor.press('Control+K')
+  await editor.press('Control+J')
+  await frame.locator('.cm-foldPlaceholder').first().waitFor({
+    state: 'detached',
+    timeout: 10_000,
+  })
+
+  const environmentContent = frame
+    .locator('.cm-line')
+    .filter({ hasText: 'First numbered item.' })
+    .first()
+  await environmentContent.click({ force: true })
+  await editor.press('Control+K')
+  await editor.press('Control+L')
+  await frame.locator('.cm-foldPlaceholder').first().waitFor({
+    state: 'visible',
+    timeout: 10_000,
+  })
+  await editor.press('Control+K')
+  await editor.press('Control+L')
+  await frame.locator('.cm-foldPlaceholder').first().waitFor({
+    state: 'detached',
+    timeout: 10_000,
+  })
+
+  const remainingFoldingChords = [
+    ['Control+[', 'fold recursively'],
+    ['Control+]', 'unfold recursively'],
+    ['Control+Shift+L', 'toggle fold recursively'],
+    ['Control+/', 'fold all block comments'],
+    ['Control+8', 'fold all regions'],
+    ['Control+9', 'unfold all regions'],
+    ['Control+-', 'fold all except selected'],
+    ['Control+=', 'unfold all except selected'],
+    ...Array.from({ length: 7 }, (_, index) => [
+      `Control+${index + 1}`,
+      `fold level ${index + 1}`,
+    ]),
+    ['Control+,', 'create folding range from selection'],
+    ['Control+.', 'remove manual folding ranges'],
+  ]
+  for (const [secondKey, label] of remainingFoldingChords) {
+    await editor.press('Control+K')
+    await editor.press(secondKey)
+    await window.waitForTimeout(100)
+    if (await window.getByText(/not a command/i).count()) {
+      throw new Error(`The ${label} shortcut was not registered`)
+    }
+    await editor.press('Control+K')
+    await editor.press('Control+J')
+  }
+  console.log(
+    'All standard visual-editor folding shortcuts passed.'
+  )
 } finally {
   await browser.close()
   codeProcess.kill()

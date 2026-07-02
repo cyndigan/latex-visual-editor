@@ -21,7 +21,13 @@ import {
   EditorView,
   keymap,
 } from '@codemirror/view'
-import { foldGutter, foldKeymap, syntaxTree } from '@codemirror/language'
+import {
+  foldCode,
+  foldGutter,
+  foldKeymap,
+  syntaxTree,
+  unfoldCode,
+} from '@codemirror/language'
 import type {
   HostToWebviewMessage,
   WebviewToHostMessage,
@@ -66,6 +72,21 @@ import { withinFormattingCommand } from './overleaf-editor/utils/tree-operations
 import { bracketMatching } from './overleaf-editor/extensions/bracket-matching'
 import { mathPreview } from './overleaf-editor/extensions/math-preview'
 import { autoPair } from './overleaf-editor/extensions/auto-pair'
+import {
+  createFoldingRangeFromSelection,
+  foldAllCode,
+  foldAllComments,
+  foldAllExceptSelected,
+  foldLevel,
+  foldRecursively,
+  removeManualFoldingRanges,
+  toggleFoldCode,
+  toggleFoldRecursively,
+  unfoldAllCode,
+  unfoldAllComments,
+  unfoldAllExceptSelected,
+  unfoldRecursively,
+} from './folding'
 
 type VsCodeApi = {
   postMessage: (message: WebviewToHostMessage) => void
@@ -199,6 +220,7 @@ window.addEventListener('message', event => {
     case 'command':
       if (message.command === 'insertFigure') openImagePicker()
       else if (message.command === 'insertTable') insertTable(3, 3)
+      else if (view && runFoldingCommand(message.command, view)) break
       else if (message.command === 'syncState' && view && message.requestId) {
         vscode.postMessage({
           type: 'stateSnapshot',
@@ -219,6 +241,36 @@ window.addEventListener('message', event => {
       break
   }
 })
+
+function runFoldingCommand(command: string, editor: EditorView): boolean {
+  const directCommands: Record<string, (view: EditorView) => boolean> = {
+    fold: foldCode,
+    unfold: unfoldCode,
+    toggleFold: toggleFoldCode,
+    foldRecursively,
+    unfoldRecursively,
+    toggleFoldRecursively,
+    foldAll: foldAllCode,
+    unfoldAll: unfoldAllCode,
+    foldAllBlockComments: foldAllComments,
+    foldAllMarkerRegions: foldAllComments,
+    unfoldAllMarkerRegions: unfoldAllComments,
+    foldAllExcept: foldAllExceptSelected,
+    unfoldAllExcept: unfoldAllExceptSelected,
+    createFoldingRangeFromSelection,
+    removeManualFoldingRanges,
+  }
+  const direct = directCommands[command]
+  if (direct) {
+    direct(editor)
+    return true
+  }
+
+  const level = /^foldLevel([1-7])$/.exec(command)?.[1]
+  if (!level) return false
+  foldLevel(editor, Number(level))
+  return true
+}
 
 /**
  * Creates the CodeMirror editor with Overleaf's parser and visual extensions.

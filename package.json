@@ -62,6 +62,94 @@
         "title": "LaTeX: Insert Table"
       },
       {
+        "command": "latexVisualEditor.fold",
+        "title": "LaTeX: Fold"
+      },
+      {
+        "command": "latexVisualEditor.unfold",
+        "title": "LaTeX: Unfold"
+      },
+      {
+        "command": "latexVisualEditor.foldAll",
+        "title": "LaTeX: Fold All"
+      },
+      {
+        "command": "latexVisualEditor.unfoldAll",
+        "title": "LaTeX: Unfold All"
+      },
+      {
+        "command": "latexVisualEditor.toggleFold",
+        "title": "LaTeX: Toggle Fold"
+      },
+      {
+        "command": "latexVisualEditor.foldRecursively",
+        "title": "LaTeX: Fold Recursively"
+      },
+      {
+        "command": "latexVisualEditor.unfoldRecursively",
+        "title": "LaTeX: Unfold Recursively"
+      },
+      {
+        "command": "latexVisualEditor.toggleFoldRecursively",
+        "title": "LaTeX: Toggle Fold Recursively"
+      },
+      {
+        "command": "latexVisualEditor.foldAllBlockComments",
+        "title": "LaTeX: Fold All Block Comments"
+      },
+      {
+        "command": "latexVisualEditor.foldAllMarkerRegions",
+        "title": "LaTeX: Fold All Regions"
+      },
+      {
+        "command": "latexVisualEditor.unfoldAllMarkerRegions",
+        "title": "LaTeX: Unfold All Regions"
+      },
+      {
+        "command": "latexVisualEditor.foldAllExcept",
+        "title": "LaTeX: Fold All Except Selected"
+      },
+      {
+        "command": "latexVisualEditor.unfoldAllExcept",
+        "title": "LaTeX: Unfold All Except Selected"
+      },
+      {
+        "command": "latexVisualEditor.foldLevel1",
+        "title": "LaTeX: Fold Level 1"
+      },
+      {
+        "command": "latexVisualEditor.foldLevel2",
+        "title": "LaTeX: Fold Level 2"
+      },
+      {
+        "command": "latexVisualEditor.foldLevel3",
+        "title": "LaTeX: Fold Level 3"
+      },
+      {
+        "command": "latexVisualEditor.foldLevel4",
+        "title": "LaTeX: Fold Level 4"
+      },
+      {
+        "command": "latexVisualEditor.foldLevel5",
+        "title": "LaTeX: Fold Level 5"
+      },
+      {
+        "command": "latexVisualEditor.foldLevel6",
+        "title": "LaTeX: Fold Level 6"
+      },
+      {
+        "command": "latexVisualEditor.foldLevel7",
+        "title": "LaTeX: Fold Level 7"
+      },
+      {
+        "command": "latexVisualEditor.createFoldingRangeFromSelection",
+        "title": "LaTeX: Create Folding Range from Selection"
+      },
+      {
+        "command": "latexVisualEditor.removeManualFoldingRanges",
+        "title": "LaTeX: Remove Manual Folding Ranges"
+      },
+      {
         "command": "latexVisualEditor.refreshWebviews",
         "title": "LaTeX: Refresh Visual Editor Webviews"
       },
@@ -120,6 +208,138 @@
         "key": "ctrl+i",
         "mac": "cmd+i",
         "when": "config.latexVisualEditor.useOverleafKeybindings && activeCustomEditorId == latexVisualEditor.editor"
+      },
+      {
+        "command": "latexVisualEditor.fold",
+        "key": "ctrl+shift+[",
+        "mac": "cmd+alt+[",
+        "when": "activeCustomEditorId == latexVisualEditor.editor"
+      },
+      {
+        "command": "latexVisualEditor.unfold",
+        "key": "ctrl+shift+]",
+        "mac": "cmd+alt+]",
+        "when": "activeCustomEditorId == latexVisualEditor.editor"
+      },
+      {
+        "command": "latexVisualEditor.foldAll",
+        "key": "ctrl+k ctrl+0",
+        "mac": "cmd+k cmd+0",
+        "when": "activeCustomEditorId == latexVisualEditor.editor"
+      },
+      {
+        "command": "latexVisualEditor.unfoldAll",
+        "key": "ctrl+k ctrl+j",
+        "mac": "cmd+k cmd+j",
+        "when": "activeCustomEditorId == latexVisualEditor.editor"
+      },
+      {
+        "command": "latexVisualEditor.toggleFold",
+        "key": "ctrl+k ctrl+l",
+        "mac": "cmd+k cmd+l",
+        "when": "activeCustomEditorId == latexVisualEditor.editor"
+      },
+      {
+        "command": "latexVisualEditor.foldRecursively",
+        "key": "ctrl+k ctrl+[",
+        "mac": "cmd+k cmd+[",
+        "when": "activeCustomEditorId == latexVisualEditor.editor"
+      },
+      {
+        "command": "latexVisualEditor.unfoldRecursively",
+        "key": "ctrl+k ctrl+]",
+        "mac": "cmd+k cmd+]",
+        "when": "activeCustomEditorId == latexVisualEditor.editor"
+      },
+      {
+        "command": "latexVisualEditor.toggleFoldRecursively",
+        "key": "ctrl+k ctrl+shift+l",
+        "mac": "cmd+k cmd+shift+l",
+        "when": "activeCustomEditorId == latexVisualEditor.editor"
+      },
+      {
+        "command": "latexVisualEditor.foldAllBlockComments",
+        "key": "ctrl+k ctrl+/",
+        "mac": "cmd+k cmd+/",
+        "when": "activeCustomEditorId == latexVisualEditor.editor"
+      },
+      {
+        "command": "latexVisualEditor.foldAllMarkerRegions",
+        "key": "ctrl+k ctrl+8",
+        "mac": "cmd+k cmd+8",
+        "when": "activeCustomEditorId == latexVisualEditor.editor"
+      },
+      {
+        "command": "latexVisualEditor.unfoldAllMarkerRegions",
+        "key": "ctrl+k ctrl+9",
+        "mac": "cmd+k cmd+9",
+        "when": "activeCustomEditorId == latexVisualEditor.editor"
+      },
+      {
+        "command": "latexVisualEditor.foldAllExcept",
+        "key": "ctrl+k ctrl+-",
+        "mac": "cmd+k cmd+-",
+        "when": "activeCustomEditorId == latexVisualEditor.editor"
+      },
+      {
+        "command": "latexVisualEditor.unfoldAllExcept",
+        "key": "ctrl+k ctrl+=",
+        "mac": "cmd+k cmd+=",
+        "when": "activeCustomEditorId == latexVisualEditor.editor"
+      },
+      {
+        "command": "latexVisualEditor.foldLevel1",
+        "key": "ctrl+k ctrl+1",
+        "mac": "cmd+k cmd+1",
+        "when": "activeCustomEditorId == latexVisualEditor.editor"
+      },
+      {
+        "command": "latexVisualEditor.foldLevel2",
+        "key": "ctrl+k ctrl+2",
+        "mac": "cmd+k cmd+2",
+        "when": "activeCustomEditorId == latexVisualEditor.editor"
+      },
+      {
+        "command": "latexVisualEditor.foldLevel3",
+        "key": "ctrl+k ctrl+3",
+        "mac": "cmd+k cmd+3",
+        "when": "activeCustomEditorId == latexVisualEditor.editor"
+      },
+      {
+        "command": "latexVisualEditor.foldLevel4",
+        "key": "ctrl+k ctrl+4",
+        "mac": "cmd+k cmd+4",
+        "when": "activeCustomEditorId == latexVisualEditor.editor"
+      },
+      {
+        "command": "latexVisualEditor.foldLevel5",
+        "key": "ctrl+k ctrl+5",
+        "mac": "cmd+k cmd+5",
+        "when": "activeCustomEditorId == latexVisualEditor.editor"
+      },
+      {
+        "command": "latexVisualEditor.foldLevel6",
+        "key": "ctrl+k ctrl+6",
+        "mac": "cmd+k cmd+6",
+        "when": "activeCustomEditorId == latexVisualEditor.editor"
+      },
+      {
+        "command": "latexVisualEditor.foldLevel7",
+        "key": "ctrl+k ctrl+7",
+        "mac": "cmd+k cmd+7",
+        "when": "activeCustomEditorId == latexVisualEditor.editor"
+      },
+      {
+        "command": "latexVisualEditor.createFoldingRangeFromSelection",
+        "key": "ctrl+k ctrl+,",
+        "mac": "cmd+k cmd+,",
+        "when": "activeCustomEditorId == latexVisualEditor.editor"
+      },
+      {
+        "command": "latexVisualEditor.removeManualFoldingRanges",
+        "key": "ctrl+k ctrl+.",
+        "mac": "cmd+k cmd+.",
+        "when": "activeCustomEditorId == latexVisualEditor.editor"
       },
       {
         "command": "latexVisualEditor.workshopBuild",

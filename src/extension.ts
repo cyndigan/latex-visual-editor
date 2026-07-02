@@ -126,6 +126,37 @@ export function activate(context: vscode.ExtensionContext): void {
         command: 'insertTable',
       })
     }),
+    ...([
+      'fold',
+      'unfold',
+      'toggleFold',
+      'foldRecursively',
+      'unfoldRecursively',
+      'toggleFoldRecursively',
+      'foldAll',
+      'unfoldAll',
+      'foldAllBlockComments',
+      'foldAllMarkerRegions',
+      'unfoldAllMarkerRegions',
+      'foldAllExcept',
+      'unfoldAllExcept',
+      'foldLevel1',
+      'foldLevel2',
+      'foldLevel3',
+      'foldLevel4',
+      'foldLevel5',
+      'foldLevel6',
+      'foldLevel7',
+      'createFoldingRangeFromSelection',
+      'removeManualFoldingRanges',
+    ] as const).map(command =>
+      vscode.commands.registerCommand(`latexVisualEditor.${command}`, () => {
+        void getActiveVisualEditor()?.webview.postMessage({
+          type: 'command',
+          command,
+        })
+      })
+    ),
     vscode.commands.registerCommand(
       'latexVisualEditor.refreshWebviews',
       refreshWebviews
