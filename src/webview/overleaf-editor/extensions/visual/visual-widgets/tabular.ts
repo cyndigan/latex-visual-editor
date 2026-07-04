@@ -163,6 +163,7 @@ export class TabularWidget extends WidgetType {
       | null = null
     let editing: HTMLTextAreaElement | null = null
     let openPopup: HTMLElement | null = null
+    let exitOnMouseUp = false
 
     const keepVisualTableExpanded = () => {
       const range = environment?.table ?? positions.tabular
@@ -806,7 +807,7 @@ export class TabularWidget extends WidgetType {
       }
     }
 
-    const finishEditing = (commit: boolean) => {
+    const finishEditing = (commit: boolean, restoreCellFocus = true) => {
       if (!editing) return
       const input = editing
       const cell = renderedCells.find(item => item.element.contains(input))
@@ -831,7 +832,7 @@ export class TabularWidget extends WidgetType {
       }
       renderTableCellContent(cell.source, cell.renderedContent)
       cell.element.replaceChildren(cell.renderedContent)
-      cell.element.focus()
+      if (restoreCellFocus) cell.element.focus()
     }
 
     const filterCellInput = (value: string) =>
@@ -874,7 +875,9 @@ export class TabularWidget extends WidgetType {
           finishEditing(true)
         }
       })
-      input.addEventListener('blur', () => finishEditing(true))
+      input.addEventListener('blur', () => {
+        if (!exitOnMouseUp) finishEditing(true, false)
+      })
       input.focus()
       if (initial === undefined) {
         input.setSelectionRange(input.value.length, input.value.length)
@@ -1171,16 +1174,24 @@ export class TabularWidget extends WidgetType {
     const onWindowMouseDown = (event: MouseEvent) => {
       const target = event.target as HTMLElement
       if (wrapper.contains(target)) {
+        exitOnMouseUp = false
         TabularWidget.activeTable = wrapper
         view.dispatch()
       } else if (!target.closest('.table-generator-dialog-backdrop')) {
-        finishEditing(true)
-        updateSelection(null)
+        exitOnMouseUp = true
       }
     }
     const onWindowMouseUp = () => {
-      pointerStart = null
-      dragging = false
+      const shouldExit = exitOnMouseUp
+      exitOnMouseUp = false
+      window.setTimeout(() => {
+        pointerStart = null
+        dragging = false
+        if (shouldExit) {
+          finishEditing(true, false)
+          updateSelection(null)
+        }
+      })
     }
     const onDocumentClick = (event: MouseEvent) => {
       if (
@@ -1195,15 +1206,15 @@ export class TabularWidget extends WidgetType {
     window.addEventListener('keydown', onKeyDown, true)
     window.addEventListener('copy', onCopy, true)
     window.addEventListener('paste', onPaste, true)
-    window.addEventListener('mousedown', onWindowMouseDown)
-    window.addEventListener('mouseup', onWindowMouseUp)
+    window.addEventListener('mousedown', onWindowMouseDown, true)
+    window.addEventListener('mouseup', onWindowMouseUp, true)
     document.addEventListener('click', onDocumentClick)
     TabularWidget.cleanup.set(wrapper, () => {
       window.removeEventListener('keydown', onKeyDown, true)
       window.removeEventListener('copy', onCopy, true)
       window.removeEventListener('paste', onPaste, true)
-      window.removeEventListener('mousedown', onWindowMouseDown)
-      window.removeEventListener('mouseup', onWindowMouseUp)
+      window.removeEventListener('mousedown', onWindowMouseDown, true)
+      window.removeEventListener('mouseup', onWindowMouseUp, true)
       document.removeEventListener('click', onDocumentClick)
       if (TabularWidget.activeTable === wrapper) {
         TabularWidget.activeTable = null
