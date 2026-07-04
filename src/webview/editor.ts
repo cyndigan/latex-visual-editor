@@ -73,6 +73,10 @@ import { bracketMatching } from './overleaf-editor/extensions/bracket-matching'
 import { mathPreview } from './overleaf-editor/extensions/math-preview'
 import { autoPair } from './overleaf-editor/extensions/auto-pair'
 import {
+  editorTheme,
+  themeClassHighlighter,
+} from './overleaf-editor/themes/cm6'
+import {
   createFoldingRangeFromSelection,
   foldAllCode,
   foldAllComments,
@@ -102,7 +106,7 @@ const pendingResources = new Map<string, string>()
 const pendingImages = new Map<string, (path: string) => void>()
 
 let view: EditorView | undefined
-const colorTheme = new Compartment()
+const selectedTheme = new Compartment()
 const overleafKeybindings = new Compartment()
 let hostVersion = 0
 let applyingHostDocument = false
@@ -321,7 +325,6 @@ function createEditor(
       foldGutter({ openText: '▾', closedText: '▸' }),
       highlightCurrentLineNumber,
       reverseSyncHighlight,
-      colorTheme.of(EditorView.darkTheme.of(isDarkTheme())),
       EditorView.contentAttributes.of({ 'aria-label': 'Visual Editor editing' }),
       keymap.of([
         ...defaultKeymap,
@@ -341,7 +344,9 @@ function createEditor(
       bracketMatching(),
       mathPreview,
       visualHighlightStyle,
+      themeClassHighlighter,
       visualTheme,
+      selectedTheme.of(editorTheme(isDarkTheme())),
       tableGeneratorTheme,
       mousedown,
       listItemMarker,
@@ -548,17 +553,15 @@ function isDarkTheme(): boolean {
 }
 
 /**
- * Keeps CodeMirror's dark-theme facet synchronized with VS Code.
+ * Keeps the synchronized Overleaf theme aligned with VS Code.
  */
 function observeColorTheme(): void {
   let dark = isDarkTheme()
   const observer = new MutationObserver(() => {
     const nextDark = isDarkTheme()
-    if (!view || nextDark === dark) return
+    if (nextDark === dark) return
     dark = nextDark
-    view.dispatch({
-      effects: colorTheme.reconfigure(EditorView.darkTheme.of(dark)),
-    })
+    applySelectedTheme()
   })
   observer.observe(document.body, {
     attributes: true,
@@ -628,6 +631,13 @@ function refreshVisualDecorations(): void {
   if (!view) return
   view.dispatch({
     effects: refreshAtomicDecorations.of(),
+  })
+}
+
+function applySelectedTheme(): void {
+  if (!view) return
+  view.dispatch({
+    effects: selectedTheme.reconfigure(editorTheme(isDarkTheme())),
   })
 }
 

@@ -118,16 +118,15 @@ export class LatexVisualEditorProvider implements vscode.CustomTextEditorProvide
     const configurationListener =
       vscode.workspace.onDidChangeConfiguration(event => {
         if (
-          !event.affectsConfiguration(
+          event.affectsConfiguration(
             'latexVisualEditor.useOverleafKeybindings'
           )
         ) {
-          return
+          void post({
+            type: 'overleafKeybindingsChanged',
+            enabled: this.configuration.useOverleafKeybindings,
+          })
         }
-        void post({
-          type: 'overleafKeybindingsChanged',
-          enabled: this.configuration.useOverleafKeybindings,
-        })
       })
 
     void metadataIndex.refresh().catch(error => {

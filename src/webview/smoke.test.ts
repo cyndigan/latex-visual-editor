@@ -8,6 +8,7 @@ describe('visual editor webview', () => {
 
   beforeEach(() => {
     document.body.className = 'vscode-dark'
+    document.body.style.setProperty('--vscode-editor-background', '#1e1e1e')
     document.body.innerHTML = '<div id="toolbar"></div><div id="editor"></div>'
     initializedText = String.raw`\documentclass{article}
 \begin{document}
@@ -90,6 +91,27 @@ Text with \textbf{bold} and \(x^2\).
     const editor = EditorView.findFromDOM(
       document.querySelector('.cm-editor') as HTMLElement
     )!
+    expect(getComputedStyle(editor.dom).backgroundColor).toBe(
+      'var(--vscode-editor-background)'
+    )
+    document.body.style.setProperty('--vscode-editor-background', '#ffffff')
+    document.body.className = 'vscode-light'
+    await vi.waitFor(() => {
+      expect(getComputedStyle(editor.dom).color).toBe('rgb(0, 0, 0)')
+    })
+    expect(
+      document.body.style.getPropertyValue('--vscode-editor-background')
+    ).toBe('#ffffff')
+
+    document.body.style.setProperty('--vscode-editor-background', '#1e1e1e')
+    document.body.className = 'vscode-dark'
+    await vi.waitFor(() => {
+      expect(getComputedStyle(editor.dom).color).toBe('rgb(248, 248, 242)')
+    })
+    expect(
+      document.body.style.getPropertyValue('--vscode-editor-background')
+    ).toBe('#1e1e1e')
+
     expect(
       document.querySelector('.latex-visual-current-line-number')?.textContent
     ).toBe('4')
