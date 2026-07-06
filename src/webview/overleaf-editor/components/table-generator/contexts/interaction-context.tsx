@@ -1,4 +1,4 @@
-import { redo, undo } from '@codemirror/commands'
+import { isolateHistory, redo, undo } from '@codemirror/commands'
 import { EditorSelection } from '@codemirror/state'
 import {
   useCallback,
@@ -220,8 +220,26 @@ export function TableInteractionProvider({
     const changes = deleteTableSelectionChanges(selection, model, positions)
     setSelection(null)
     keepExpanded()
-    view.dispatch({ changes, userEvent: 'delete' })
-  }, [keepExpanded, model, positions, selectionState, setSelection, view])
+    view.dispatch({
+      annotations: isolateHistory.of('full'),
+      changes,
+      userEvent: 'delete',
+    })
+    view.focus?.()
+    window.dispatchEvent(
+      new CustomEvent('table-mutated', {
+        detail: { ...(environment?.table ?? positions.tabular) },
+      })
+    )
+  }, [
+    environment,
+    keepExpanded,
+    model,
+    positions,
+    selectionState,
+    setSelection,
+    view,
+  ])
 
   const pasteText = useCallback(
     (text: string) => {
@@ -239,20 +257,36 @@ export function TableInteractionProvider({
     (command: () => void) => {
       editingRef.current = null
       setEditing(null)
+      keepExpanded()
       command()
+      view.focus?.()
       window.dispatchEvent(
         new CustomEvent('table-mutated', {
           detail: { ...(environment?.table ?? positions.tabular) },
         })
       )
     },
-    [environment, positions.tabular]
+    [environment, keepExpanded, positions.tabular, view]
   )
 
   useEffect(() => {
     const wrapper = wrapperRef.current
     if (!wrapper) return
     const onKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented) {
+        if (
+          activeTable === wrapper &&
+          (event.ctrlKey || event.metaKey) &&
+          event.key.toLowerCase() === 'z'
+        ) {
+          window.dispatchEvent(
+            new CustomEvent('table-mutated', {
+              detail: { ...(environment?.table ?? positions.tabular) },
+            })
+          )
+        }
+        return
+      }
       if (activeTable !== wrapper || !selectionState || editing ||
           wrapper.querySelector('.table-generator-dialog-backdrop')) return
       const command = event.ctrlKey || event.metaKey
@@ -275,7 +309,16 @@ export function TableInteractionProvider({
           void navigator.clipboard.readText().then(pasteText)
         } else if (lower === 'z') {
           event.preventDefault(); event.stopPropagation()
+          const preserveScrollTop = view.scrollDOM.scrollTop
           event.shiftKey ? redo(view) : undo(view)
+          window.dispatchEvent(
+            new CustomEvent('table-mutated', {
+              detail: {
+                ...(environment?.table ?? positions.tabular),
+                preserveScrollTop,
+              },
+            })
+          )
         } else if (lower === 'y') {
           event.preventDefault(); event.stopPropagation(); redo(view)
         }
@@ -346,8 +389,9 @@ export function TableInteractionProvider({
       window.removeEventListener('mousedown', onMouseDown, true)
       window.removeEventListener('mouseup', onMouseUp, true)
     }
-  }, [commitEditing, deleteSelection, editing, model, pasteText, selectedText,
-      selectionState, setSelection, startEditing, view, wrapperRef])
+  }, [commitEditing, deleteSelection, editing, environment, model, pasteText,
+      positions.tabular, selectedText, selectionState, setSelection,
+      startEditing, view, wrapperRef])
 
   useEffect(() => {
     const wrapper = wrapperRef.current

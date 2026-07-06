@@ -1,3 +1,4 @@
+import { isolateHistory } from '@codemirror/commands'
 import type { ChangeSpec } from '@codemirror/state'
 import type { EditorView } from '@codemirror/view'
 import {
@@ -320,6 +321,7 @@ export function removeRowsOrColumns(
   if (expanded.spansEntireTable(table)) {
     const firstColumn = { ...table.columns[0], borderLeft: 0, borderRight: 0 }
     view.dispatch({
+      annotations: isolateHistory.of('full'),
       changes: [
         {
           from: positions.specification.from,
@@ -382,7 +384,7 @@ export function removeRowsOrColumns(
       insert: generateColumnSpecification(columns),
     })
   }
-  view.dispatch({ changes })
+  view.dispatch({ annotations: isolateHistory.of('full'), changes })
 }
 
 export function mergeCells(

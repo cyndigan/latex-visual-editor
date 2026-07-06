@@ -340,7 +340,7 @@ describe('TabularWidget', () => {
       window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete' }))
     })
 
-    expect(dispatches.at(-1)).toEqual({
+    expect(dispatches.at(-1)).toMatchObject({
       changes: [
         { from: 5, to: 14, insert: '' },
         { from: 20, to: 22, insert: 'l' },

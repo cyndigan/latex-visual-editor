@@ -152,6 +152,7 @@ const reverseSyncHighlight = StateField.define<DecorationSet>({
   provide: field => EditorView.decorations.from(field),
 })
 let reverseSyncHighlightTimeout: number | undefined
+let lastTableMutationRange: { from: number; to: number } | undefined
 
 window.addEventListener('focus', () => {
   vscode.postMessage({ type: 'focusChanged', focused: true })
@@ -167,7 +168,17 @@ window.addEventListener('table-selection-changed', event => {
   })
 })
 window.addEventListener('table-mutated', event => {
-  const range = (event as CustomEvent<{ from: number; to: number }>).detail
+  const {
+    preserveScrollTop,
+    ...range
+  } = (
+    event as CustomEvent<{
+      from: number
+      to: number
+      preserveScrollTop?: number
+    }>
+  ).detail
+  lastTableMutationRange = range
   if (view) {
     const selection = view.state.selection.main
     const intersects =
@@ -181,6 +192,9 @@ window.addEventListener('table-mutated', event => {
     }
   }
   refreshVisualDecorationsWhenParsed()
+  if (preserveScrollTop !== undefined) {
+    preserveVisualScrollTop(preserveScrollTop)
+  }
 })
 
 window.addEventListener('message', event => {
@@ -363,6 +377,24 @@ function createEditor(
         if (update.docChanged && !applyingHostDocument) {
           sendMinimalEdit(update.startState.doc.toString(), update.state.doc.toString())
         }
+        if (
+          update.docChanged &&
+          lastTableMutationRange &&
+          update.transactions.some(
+            transaction =>
+              transaction.isUserEvent('undo') ||
+              transaction.isUserEvent('redo')
+          )
+        ) {
+          const preserveScrollTop = update.view.scrollDOM.scrollTop
+          requestAnimationFrame(() => {
+            window.dispatchEvent(
+              new CustomEvent('table-mutated', {
+                detail: { ...lastTableMutationRange, preserveScrollTop },
+              })
+            )
+          })
+        }
         if (update.selectionSet) {
           sendSelection(update.state.selection.main)
         }
@@ -536,6 +568,22 @@ function centerVisualAnchor(anchor: number, done?: () => void): void {
 
 function maximumScrollTop(editor: EditorView): number {
   return Math.max(0, editor.scrollDOM.scrollHeight - editor.scrollDOM.clientHeight)
+}
+
+function preserveVisualScrollTop(scrollTop: number): void {
+  let previousHeight = -1
+  let stableFrames = 0
+  let frames = 0
+  const restore = () => {
+    if (!view) return
+    view.scrollDOM.scrollTop = Math.min(scrollTop, maximumScrollTop(view))
+    const height = view.scrollDOM.scrollHeight
+    stableFrames = height === previousHeight ? stableFrames + 1 : 0
+    previousHeight = height
+    frames += 1
+    if (stableFrames < 6 && frames < 60) requestAnimationFrame(restore)
+  }
+  restore()
 }
 
 window.addEventListener('pagehide', () => {

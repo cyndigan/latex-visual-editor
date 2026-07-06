@@ -287,6 +287,24 @@ try {
   await window.keyboard.press('Control+S')
   await waitForSourceText(fixture, '\\begin{tabular}{lc}', 15_000)
 
+  const sourceBeforeColumnDelete = await readFile(fixture, 'utf8')
+  await frame.locator('[data-column-selector="1"]').click({ force: true })
+  await frame.locator('[data-column-selector="1"]').press('Delete')
+  const scrollTopBeforeUndo = await frame
+    .locator('.cm-scroller')
+    .evaluate(element => element.scrollTop)
+  await window.keyboard.press('Control+z')
+  await waitForExactSource(fixture, sourceBeforeColumnDelete, 10_000)
+  await frame.waitForTimeout(500)
+  const scrollTopAfterUndo = await frame
+    .locator('.cm-scroller')
+    .evaluate(element => element.scrollTop)
+  if (Math.abs(scrollTopAfterUndo - scrollTopBeforeUndo) > 5) {
+    throw new Error(
+      `Undoing a keyboard table deletion moved the editor viewport (${scrollTopBeforeUndo} -> ${scrollTopAfterUndo})`
+    )
+  }
+
   const tableTrigger = frame.locator('#toolbar-table')
   await tableTrigger.click()
   const sizePopup = frame.locator('#toolbar-table-menu')
@@ -318,7 +336,7 @@ try {
   }
 
   console.log(
-    'Table math restoration, responsive toolbar buttons/dialogs, generator grid, caption, Ctrl+C, structural Delete, menu insertion, expansion, and scroll preservation passed.'
+    'Table math restoration, responsive toolbar buttons/dialogs, generator grid, caption, Ctrl+C, structural Delete and undo, menu insertion, expansion, and scroll preservation passed.'
   )
 } finally {
   await browser.close()
@@ -371,6 +389,15 @@ async function waitForSourceText(file, expected, timeout) {
     await new Promise(resolve => setTimeout(resolve, 250))
   }
   throw new Error(`Source did not contain ${expected}`)
+}
+
+async function waitForExactSource(file, expected, timeout) {
+  const deadline = Date.now() + timeout
+  while (Date.now() < deadline) {
+    if ((await readFile(file, 'utf8')) === expected) return
+    await new Promise(resolve => setTimeout(resolve, 250))
+  }
+  throw new Error('Source was not restored after undo')
 }
 
 async function waitForCaptionPosition(file, expected, timeout) {
