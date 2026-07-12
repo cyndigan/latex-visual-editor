@@ -15,6 +15,7 @@ import { packageNames } from './visual-editor/languages/latex/completions/data/p
 import extraSnippets from './visual-editor/languages/latex/completions/data/snippets'
 import topHundredSnippets from './visual-editor/languages/latex/completions/data/top-hundred-snippets'
 import { LaTeXLanguage } from './visual-editor/languages/latex/latex-language'
+import { isInEmptyArgumentNodeForAutocomplete } from './visual-editor/utils/tree-operations/completions'
 
 type MetadataProvider = () => WorkspaceMetadata
 
@@ -26,15 +27,7 @@ export function latexAutocomplete(metadata: MetadataProvider) {
     LaTeXLanguage.data.of({ autocomplete: source }),
     EditorView.updateListener.of(update => {
       if (!update.docChanged && !update.selectionSet) return
-      const before = update.state.sliceDoc(
-        Math.max(0, update.state.selection.main.head - 120),
-        update.state.selection.main.head
-      )
-      if (
-        /\\(?:begin|end|cite|ref|usepackage|input|include|subfile|includegraphics)\{[^}]*$/.test(
-          before
-        )
-      ) {
+      if (isInEmptyArgumentNodeForAutocomplete(update.state)) {
         startCompletion(update.view)
       }
     }),
