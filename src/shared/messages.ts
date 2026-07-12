@@ -23,6 +23,7 @@ export type HostToWebviewMessage =
       documentUri: string
       metadata: WorkspaceMetadata
       configuration: EditorConfiguration
+      focusEditor?: boolean
       selection?: { anchor: number; head: number }
       viewState?: {
         anchor: number

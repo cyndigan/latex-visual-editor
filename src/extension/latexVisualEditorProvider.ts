@@ -41,6 +41,7 @@ export class LatexVisualEditorProvider implements vscode.CustomTextEditorProvide
   private readonly tableSelections = new Map<vscode.WebviewPanel, string>()
   private readonly pendingStateSnapshots = new Map<string, () => void>()
   private readonly pendingAutoBuildSaves = new Map<string, NodeJS.Timeout>()
+  private readonly sourceEditorSwitches = new Set<string>()
 
   constructor(private readonly context: vscode.ExtensionContext) {}
 
@@ -69,6 +70,11 @@ export class LatexVisualEditorProvider implements vscode.CustomTextEditorProvide
     document: vscode.TextDocument,
     panel: vscode.WebviewPanel
   ): Promise<void> {
+    // Explorer opens should preserve Explorer focus. Explicit source-to-visual
+    // switches instead focus the newly created visual editor.
+    const focusEditor = this.sourceEditorSwitches.delete(
+      document.uri.toString()
+    )
     const workspaceFolder = vscode.workspace.getWorkspaceFolder(document.uri)
     const metadataIndex = this.getMetadataIndex(workspaceFolder)
     const imageFiles = new ImageFileService(document, workspaceFolder)
@@ -94,6 +100,7 @@ export class LatexVisualEditorProvider implements vscode.CustomTextEditorProvide
         documentUri: document.uri.toString(),
         metadata: metadataIndex.current,
         configuration: this.configuration,
+        focusEditor,
         selection: mapSelectionToWebview(
           document.getText(),
           getStoredEditorSelection(document.uri)
@@ -236,6 +243,11 @@ export class LatexVisualEditorProvider implements vscode.CustomTextEditorProvide
   getActiveTableSelectionText(): string | undefined {
     const panel = getActiveVisualEditor()
     return panel ? this.tableSelections.get(panel) : undefined
+  }
+
+  /** Keeps focus in the editor for an explicit source-to-visual switch. */
+  markSourceEditorSwitch(uri: vscode.Uri): void {
+    this.sourceEditorSwitches.add(uri.toString())
   }
 
   /**

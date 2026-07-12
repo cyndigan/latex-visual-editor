@@ -78,6 +78,7 @@ export function activate(context: vscode.ExtensionContext): void {
       )
     }
     await recordEditorMode(context, 'visual')
+    visualEditorProvider.markSourceEditorSwitch(target)
     await replaceDocumentEditor(target, VISUAL_EDITOR_VIEW_TYPE)
   }
 
@@ -192,6 +193,7 @@ export function activate(context: vscode.ExtensionContext): void {
         await replaceDocumentEditor(target, 'default')
         await vscode.commands.executeCommand('latex-workshop.view')
       } finally {
+        visualEditorProvider.markSourceEditorSwitch(target)
         await replaceDocumentEditor(target, VISUAL_EDITOR_VIEW_TYPE)
       }
     }),
@@ -295,7 +297,10 @@ async function syncTexEditorAssociation(
     'editorAssociations'
   )
   const associations = { ...(inspected?.workspaceValue ?? {}) }
-  associations['*.tex'] = mode === 'visual' ? VISUAL_EDITOR_VIEW_TYPE : 'default'
+  const editorId = mode === 'visual' ? VISUAL_EDITOR_VIEW_TYPE : 'default'
+  if (associations['*.tex'] === editorId) return
+
+  associations['*.tex'] = editorId
 
   try {
     await configuration.update(

@@ -205,7 +205,12 @@ window.addEventListener('message', event => {
       metadata = message.metadata
       useOverleafKeybindings = message.configuration.useOverleafKeybindings
       if (!view) {
-        createEditor(message.text, message.selection, message.viewState)
+        createEditor(
+          message.text,
+          message.selection,
+          message.viewState,
+          message.focusEditor
+        )
       } else {
         replaceDocumentFromHost(message.text)
       }
@@ -322,7 +327,8 @@ function createEditor(
     anchor: number
     visualScrollTop?: number
     source: 'source' | 'visual'
-  }
+  },
+  focusEditor = false
 ): void {
   const documentLength = text.length
   const anchor = Math.min(selection?.anchor ?? 0, documentLength)
@@ -430,7 +436,7 @@ function createEditor(
       }
     })
   }
-  view.focus()
+  if (focusEditor) view.focus()
 }
 
 function revealReverseSyncSelection(selection: {
