@@ -3,8 +3,10 @@ build/
 dist/
 examples/
 .vscode-test/
+.vscode/
 AGENTS.md
 *.vsix
 coverage/
 src/webview/visual-editor/lezer-latex/latex.mjs
 src/webview/visual-editor/lezer-latex/latex.terms.mjs
+*.bat
