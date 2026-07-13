@@ -33,7 +33,7 @@ export class ImageFileService {
    */
   async resolve(graphicsPath: string): Promise<vscode.Uri | undefined> {
     const cleanPath = graphicsPath.replace(/^['"]|['"]$/g, '')
-    const candidates = this.candidatePaths(cleanPath)
+    const candidates = await this.candidatePaths(cleanPath)
     const root = this.resourceRoot
 
     for (const candidate of candidates) {
@@ -88,14 +88,12 @@ export class ImageFileService {
   /**
    * Builds likely graphics paths, including common omitted extensions.
    */
-  private candidatePaths(graphicsPath: string): vscode.Uri[] {
+  private async candidatePaths(graphicsPath: string): Promise<vscode.Uri[]> {
     const documentDirectory = vscode.Uri.file(path.dirname(this.document.uri.fsPath))
-    const bases = [
-      vscode.Uri.joinPath(documentDirectory, graphicsPath),
-      ...(this.workspaceFolder
-        ? [vscode.Uri.joinPath(this.workspaceFolder.uri, graphicsPath)]
-        : []),
-    ]
+    const rootDirectory = await this.rootDirectory()
+    const bases = uniqueUris([rootDirectory, documentDirectory]).map(directory =>
+      vscode.Uri.joinPath(directory, graphicsPath)
+    )
     const candidates = uniqueUris(bases)
     if (!path.extname(graphicsPath)) {
       for (const base of bases) {
@@ -105,6 +103,31 @@ export class ImageFileService {
       }
     }
     return uniqueUris(candidates)
+  }
+
+  /**
+   * Finds the compilation root directory. An explicit TeX root directive takes
+   * precedence; otherwise, the nearest ancestor containing main.tex is used.
+   */
+  private async rootDirectory(): Promise<vscode.Uri> {
+    let directory = path.dirname(this.document.uri.fsPath)
+    const directive = (this.document.getText?.() ?? '')
+      .match(/^\s*%\s*!\s*TEX\s+root\s*=\s*(.+?)\s*$/im)?.[1]
+    if (directive) {
+      const root = vscode.Uri.file(path.resolve(directory, directive))
+      if (await uriExists(root)) return vscode.Uri.file(path.dirname(root.fsPath))
+    }
+
+    const workspaceRoot = this.workspaceFolder?.uri
+    while (!workspaceRoot || isUriInsideRoot(vscode.Uri.file(directory), workspaceRoot)) {
+      if (await uriExists(vscode.Uri.file(path.join(directory, 'main.tex')))) {
+        return vscode.Uri.file(directory)
+      }
+      const parent = path.dirname(directory)
+      if (parent === directory) break
+      directory = parent
+    }
+    return vscode.Uri.file(path.dirname(this.document.uri.fsPath))
   }
 
 }
