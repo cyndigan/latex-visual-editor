@@ -107,15 +107,15 @@ export function Cell({
       colSpan={width}
       tabIndex={rowIndex * rowLength + cellIndex + 1}
       className={classes}
-      onMouseDown={event =>
-        selectionState.pointerDown(event, rowIndex, fromColumn, toColumn)
-      }
-      onMouseMove={event =>
-        selectionState.pointerMove(event, rowIndex, fromColumn)
-      }
-      onMouseUp={() =>
-        selectionState.pointerUp(rowIndex, cellIndex, cell.content.trim())
-      }
+      onMouseDown={event => {
+        if (!editing) selectionState.pointerDown(event, rowIndex, fromColumn, toColumn)
+      }}
+      onMouseMove={event => {
+        if (!editing) selectionState.pointerMove(event, rowIndex, fromColumn)
+      }}
+      onMouseUp={() => {
+        if (!editing) selectionState.pointerUp(rowIndex, cellIndex, cell.content.trim())
+      }}
     >
       {editing ? (
         <CellInput />

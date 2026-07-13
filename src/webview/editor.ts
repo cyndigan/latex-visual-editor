@@ -154,6 +154,7 @@ const reverseSyncHighlight = StateField.define<DecorationSet>({
 })
 let reverseSyncHighlightTimeout: number | undefined
 let lastTableMutationRange: { from: number; to: number } | undefined
+let tableFormattingState: { bold: boolean; italic: boolean } | undefined
 
 window.addEventListener('focus', () => {
   vscode.postMessage({ type: 'focusChanged', focused: true })
@@ -163,10 +164,30 @@ window.addEventListener('blur', () => {
 })
 vscode.postMessage({ type: 'focusChanged', focused: document.hasFocus() })
 window.addEventListener('table-selection-changed', event => {
+  const detail = (event as CustomEvent<{
+    text?: string
+    formatting?: { bold: boolean; italic: boolean }
+  }>).detail
+  if (detail.formatting) {
+    tableFormattingState = detail.formatting
+    setToolbarToggle('bold', detail.formatting.bold)
+    setToolbarToggle('italic', detail.formatting.italic)
+  } else {
+    tableFormattingState = undefined
+  }
   vscode.postMessage({
     type: 'tableSelectionChanged',
-    text: (event as CustomEvent<{ text?: string }>).detail.text,
+    text: detail.text,
   })
+})
+window.addEventListener('table-formatting-changed', event => {
+  const formatting = (event as CustomEvent<{
+    bold: boolean
+    italic: boolean
+  }>).detail
+  tableFormattingState = formatting
+  setToolbarToggle('bold', formatting.bold)
+  setToolbarToggle('italic', formatting.italic)
 })
 window.addEventListener('table-mutated', event => {
   const {
@@ -744,7 +765,7 @@ function createToolbar(): void {
     toolbar,
     'Bold',
     'B',
-    () => run(toggleRanges('\\textbf')),
+    () => runFormatting('\\textbf'),
     'bold',
     true
   )
@@ -752,7 +773,7 @@ function createToolbar(): void {
     toolbar,
     'Italic',
     'I',
-    () => run(toggleRanges('\\textit')),
+    () => runFormatting('\\textit'),
     'italic',
     true
   )
@@ -930,6 +951,15 @@ function addButton(
 /**
  * Runs a CodeMirror command and restores editor focus.
  */
+function runFormatting(command: '\\textbf' | '\\textit'): void {
+  const event = new CustomEvent('table-formatting-request', {
+    cancelable: true,
+    detail: { command },
+  })
+  if (!window.dispatchEvent(event)) return
+  run(toggleRanges(command))
+}
+
 function run(command: (editor: EditorView) => boolean): void {
   if (!view) return
   command(view)
@@ -1207,8 +1237,8 @@ function updateToolbarState(): void {
   if (!view) return
   const state = view.state
   const isFormatted = withinFormattingCommand(state)
-  setToolbarToggle('bold', isFormatted('\\textbf'))
-  setToolbarToggle('italic', isFormatted('\\textit'))
+  setToolbarToggle('bold', tableFormattingState?.bold ?? isFormatted('\\textbf'))
+  setToolbarToggle('italic', tableFormattingState?.italic ?? isFormatted('\\textit'))
   setToolbarToggle('quote', isFormatted('\\say'))
 
   const listType = ancestorListType(state)
