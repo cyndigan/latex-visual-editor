@@ -421,7 +421,7 @@ describe('TabularWidget', () => {
         nextParsed.specification.from,
         nextParsed.specification.to
       )
-    ).toBe('l')
+    ).toBe('|l|')
     expect(nextParsed.table.rows[1].cells.map(cell => cell.content.trim())).toEqual([
       'Headings',
     ])

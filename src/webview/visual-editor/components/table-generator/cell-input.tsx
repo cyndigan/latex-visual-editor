@@ -7,6 +7,46 @@ const filterInput = (value: string) =>
     .replace(/(^|[^\\])%/g, '$1\\%')
     .replaceAll('\\\\', '')
 
+export function toggleTextFormatting(
+  content: string,
+  from: number,
+  to: number,
+  command: '\\textbf' | '\\textit'
+) {
+  const prefix = `${command}{`
+  const selectsFormattedText =
+    content.slice(from - prefix.length, from) === prefix && content[to] === '}'
+  const selectsWholeCommand =
+    content.slice(from, from + prefix.length) === prefix && content[to - 1] === '}'
+
+  if (selectsFormattedText) {
+    return {
+      content:
+        content.slice(0, from - prefix.length) + content.slice(from, to) +
+        content.slice(to + 1),
+      from: from - prefix.length,
+      to: to - prefix.length,
+    }
+  }
+
+  if (selectsWholeCommand) {
+    return {
+      content:
+        content.slice(0, from) + content.slice(from + prefix.length, to - 1) +
+        content.slice(to),
+      from,
+      to: to - prefix.length - 1,
+    }
+  }
+
+  return {
+    content: content.slice(0, from) + prefix + content.slice(from, to) +
+      '}' + content.slice(to),
+    from: from + prefix.length,
+    to: to + prefix.length,
+  }
+}
+
 export function CellInput() {
   const { editing, updateDraft, commitEditing, cancelEditing } =
     useTableEditing()
@@ -41,7 +81,22 @@ export function CellInput() {
       }}
       onBlur={() => commitEditing(false)}
       onKeyDown={event => {
-        if (event.key === 'Escape') {
+        const command = event.ctrlKey || event.metaKey
+        const key = event.key.toLowerCase()
+        if (command && !event.altKey && (key === 'b' || key === 'i')) {
+          event.preventDefault()
+          event.stopPropagation()
+          const next = toggleTextFormatting(
+            editing.content,
+            event.currentTarget.selectionStart,
+            event.currentTarget.selectionEnd,
+            key === 'b' ? '\\textbf' : '\\textit'
+          )
+          updateDraft(next.content)
+          requestAnimationFrame(() => {
+            ref.current?.setSelectionRange(next.from, next.to)
+          })
+        } else if (event.key === 'Escape') {
           event.preventDefault()
           cancelEditing()
         } else if (event.key === 'Tab') {

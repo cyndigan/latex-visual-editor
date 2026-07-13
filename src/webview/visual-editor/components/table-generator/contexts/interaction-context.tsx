@@ -1,5 +1,6 @@
 import { isolateHistory, redo, undo } from '@codemirror/commands'
-import { EditorSelection } from '@codemirror/state'
+import { EditorSelection, type SelectionRange } from '@codemirror/state'
+import { toggleRanges } from '../../../commands/ranges'
 import {
   useCallback,
   useEffect,
@@ -35,6 +36,8 @@ type PointerStart = {
 }
 
 let activeTable: HTMLElement | null = null
+const persistedSelections = new WeakMap<HTMLElement, TableSelection>()
+const persistedSelectionsByPosition = new Map<number, TableSelection>()
 const DRAG_THRESHOLD = 4
 
 export function TableInteractionProvider({
@@ -43,7 +46,16 @@ export function TableInteractionProvider({
 }: PropsWithChildren<{ wrapperRef: RefObject<HTMLDivElement | null> }>) {
   const { view, parsed, positions, environment } = useTableContext()
   const model = parsed.table
-  const [selectionState, setSelectionState] = useState<TableSelection | null>(null)
+  const selectionKey = positions.tabular.from
+  const [selectionState, setSelectionState] = useState<TableSelection | null>(
+    () => {
+      const wrapper = wrapperRef.current
+      return (
+        persistedSelectionsByPosition.get(selectionKey)?.explode(model) ??
+        (wrapper ? persistedSelections.get(wrapper)?.explode(model) ?? null : null)
+      )
+    }
+  )
   const [editing, setEditing] = useState<EditingCell | null>(null)
   const editingRef = useRef<EditingCell | null>(null)
   const [dragging, setDragging] = useState(false)
@@ -60,6 +72,14 @@ export function TableInteractionProvider({
     (next: TableSelection | null) => {
       const exploded = next?.explode(model) ?? null
       setSelectionState(exploded)
+      const wrapper = wrapperRef.current
+      if (exploded) {
+        persistedSelectionsByPosition.set(selectionKey, exploded)
+        if (wrapper) persistedSelections.set(wrapper, exploded)
+      } else {
+        persistedSelectionsByPosition.delete(selectionKey)
+        if (wrapper) persistedSelections.delete(wrapper)
+      }
       activeTable = exploded ? wrapperRef.current : null
       window.dispatchEvent(
         new CustomEvent('table-selection-changed', {
@@ -67,7 +87,7 @@ export function TableInteractionProvider({
         })
       )
     },
-    [model, selectedText, wrapperRef]
+    [model, selectedText, selectionKey, wrapperRef]
   )
 
   const keepExpanded = useCallback(() => {
@@ -157,6 +177,7 @@ export function TableInteractionProvider({
       event.preventDefault()
       document.getSelection()?.removeAllRanges()
       activeTable = wrapperRef.current
+      wrapperRef.current?.focus({ preventScroll: true })
       pointer.current = {
         x: event.clientX,
         y: event.clientY,
@@ -269,6 +290,38 @@ export function TableInteractionProvider({
     [environment, keepExpanded, positions.tabular, view]
   )
 
+  const toggleSelectedCells = useCallback(
+    (command: '\\textbf' | '\\textit') => {
+      if (!selectionState || view.state.readOnly) return false
+      const { minX, maxX, minY, maxY } = selectionState.normalized()
+      const ranges: SelectionRange[] = []
+      model.iterateCells(minY, maxY, minX, maxX, cell => {
+        ranges.push(EditorSelection.range(cell.from, cell.to))
+      })
+      if (!ranges.length) return false
+
+      keepExpanded()
+      for (const range of ranges.reverse()) {
+        view.dispatch({ selection: EditorSelection.create([range]) })
+        toggleRanges(command)(view)
+      }
+      window.dispatchEvent(
+        new CustomEvent('table-mutated', {
+          detail: { ...(environment?.table ?? positions.tabular) },
+        })
+      )
+      return true
+    },
+    [
+      environment,
+      keepExpanded,
+      model,
+      positions,
+      selectionState,
+      view,
+    ]
+  )
+
   useEffect(() => {
     const wrapper = wrapperRef.current
     if (!wrapper) return
@@ -287,10 +340,18 @@ export function TableInteractionProvider({
         }
         return
       }
-      if (activeTable !== wrapper || !selectionState || editing ||
+      if (activeTable !== wrapper || !selectionState ||
           wrapper.querySelector('.table-generator-dialog-backdrop')) return
       const command = event.ctrlKey || event.metaKey
       const lower = event.key.toLowerCase()
+      if (command && !event.altKey && (lower === 'b' || lower === 'i')) {
+        if (editing) return
+        if (toggleSelectedCells(lower === 'b' ? '\\textbf' : '\\textit')) {
+          event.preventDefault(); event.stopPropagation()
+        }
+        return
+      }
+      if (editing) return
       if (event.key === 'Delete' || event.key === 'Backspace') {
         event.preventDefault(); event.stopPropagation(); deleteSelection(); return
       }
@@ -391,14 +452,22 @@ export function TableInteractionProvider({
     }
   }, [commitEditing, deleteSelection, editing, environment, model, pasteText,
       positions.tabular, selectedText, selectionState, setSelection,
-      startEditing, view, wrapperRef])
+      startEditing, toggleSelectedCells, view, wrapperRef])
 
   useEffect(() => {
     const wrapper = wrapperRef.current
+    if (selectionState && wrapper) activeTable = wrapper
     return () => {
-      if (activeTable === wrapper) activeTable = null
+      if (
+        wrapper &&
+        activeTable === wrapper &&
+        !persistedSelections.has(wrapper) &&
+        !persistedSelectionsByPosition.has(selectionKey)
+      ) {
+        activeTable = null
+      }
     }
-  }, [wrapperRef])
+  }, [selectionKey, selectionState, wrapperRef])
 
   const selectionValue = useMemo<SelectionContextValue>(
     () => ({

@@ -26,6 +26,9 @@ export type TabularProps = {
 
 export function Tabular(props: TabularProps) {
   const wrapperRef = useMemo(() => ({ current: props.host }), [props.host])
+  useEffect(() => {
+    props.host.tabIndex = -1
+  }, [props.host])
   return (
     <TableProvider value={props}>
       <TableUIProvider>
