@@ -203,6 +203,21 @@ body {
   user-select: text;
 }
 
+.table-generator-cell-input .cm-editor,
+.table-generator-cell-input .cm-scroller,
+.table-generator-cell-input .cm-content {
+  min-height: inherit;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  line-height: inherit;
+}
+
+.table-generator-cell-input .cm-scroller { overflow: hidden; }
+.table-generator-cell-input .cm-line { padding: 0; }
+
+
 .table-generator-menu-caret {
   margin-left: 4px;
   font-size: 11px;

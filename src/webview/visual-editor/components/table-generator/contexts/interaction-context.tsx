@@ -35,6 +35,11 @@ type PointerStart = {
   toColumn: number
 }
 
+type TableFormattingState = {
+  bold: boolean
+  italic: boolean
+}
+
 let activeTable: HTMLElement | null = null
 const persistedSelections = new WeakMap<HTMLElement, TableSelection>()
 const persistedSelectionsByPosition = new Map<number, TableSelection>()
@@ -68,6 +73,26 @@ export function TableInteractionProvider({
     [model]
   )
 
+  const selectedFormatting = useCallback(
+    (selection: TableSelection): TableFormattingState => {
+      const { minX, maxX, minY, maxY } = selection.normalized()
+      const isFormatted = (command: '\\textbf' | '\\textit') => {
+        let hasCells = false
+        let formatted = true
+        model.iterateCells(minY, maxY, minX, maxX, cell => {
+          hasCells = true
+          const content = cell.content.trim()
+          if (!content.startsWith(`${command}{`) || !content.endsWith('}')) {
+            formatted = false
+          }
+        })
+        return hasCells && formatted
+      }
+      return { bold: isFormatted('\\textbf'), italic: isFormatted('\\textit') }
+    },
+    [model]
+  )
+
   const setSelection = useCallback(
     (next: TableSelection | null) => {
       const exploded = next?.explode(model) ?? null
@@ -83,11 +108,13 @@ export function TableInteractionProvider({
       activeTable = exploded ? wrapperRef.current : null
       window.dispatchEvent(
         new CustomEvent('table-selection-changed', {
-          detail: { text: exploded ? selectedText(exploded) : undefined },
+          detail: exploded
+            ? { text: selectedText(exploded), formatting: selectedFormatting(exploded) }
+            : { text: undefined },
         })
       )
     },
-    [model, selectedText, selectionKey, wrapperRef]
+    [model, selectedFormatting, selectedText, selectionKey, wrapperRef]
   )
 
   const keepExpanded = useCallback(() => {
@@ -173,7 +200,7 @@ export function TableInteractionProvider({
 
   const pointerDown = useCallback(
     (event: React.MouseEvent, row: number, fromColumn: number, toColumn: number) => {
-      if (event.button !== 0 || event.target instanceof HTMLTextAreaElement) return
+      if (event.button !== 0) return
       event.preventDefault()
       document.getSelection()?.removeAllRanges()
       activeTable = wrapperRef.current
@@ -305,6 +332,7 @@ export function TableInteractionProvider({
         view.dispatch({ selection: EditorSelection.create([range]) })
         toggleRanges(command)(view)
       }
+      keepExpanded()
       window.dispatchEvent(
         new CustomEvent('table-mutated', {
           detail: { ...(environment?.table ?? positions.tabular) },
@@ -468,6 +496,36 @@ export function TableInteractionProvider({
       }
     }
   }, [selectionKey, selectionState, wrapperRef])
+
+  useEffect(() => {
+    const onFormattingRequest = (event: Event) => {
+      const command = (event as CustomEvent<{
+        command?: '\\textbf' | '\\textit'
+      }>).detail.command
+      if (
+        activeTable !== wrapperRef.current ||
+        !selectionState ||
+        editing ||
+        !command
+      ) return
+      if (toggleSelectedCells(command)) event.preventDefault()
+    }
+    window.addEventListener('table-formatting-request', onFormattingRequest)
+    return () =>
+      window.removeEventListener('table-formatting-request', onFormattingRequest)
+  }, [editing, selectionState, toggleSelectedCells, wrapperRef])
+
+  useEffect(() => {
+    if (!selectionState) return
+    window.dispatchEvent(
+      new CustomEvent('table-selection-changed', {
+        detail: {
+          text: selectedText(selectionState),
+          formatting: selectedFormatting(selectionState),
+        },
+      })
+    )
+  }, [model, selectedFormatting, selectedText, selectionState])
 
   const selectionValue = useMemo<SelectionContextValue>(
     () => ({

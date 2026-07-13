@@ -158,10 +158,10 @@ describe('TabularWidget', () => {
       )
     })
 
-    const input = cells[0].querySelector('textarea')
+    const input = cells[0].querySelector<HTMLElement>('.cm-content')
     expect(input).not.toBeNull()
     expect(document.activeElement).toBe(input)
-    expect(input?.selectionStart).toBe('first'.length)
+    expect(input?.textContent).toBe('first')
     expect(cells[0].classList.contains('selected')).toBe(true)
     expect(
       dom.querySelector<HTMLElement>('.table-generator-floating-toolbar')
@@ -184,14 +184,14 @@ describe('TabularWidget', () => {
           new MouseEvent('mouseup', { bubbles: true, button: 0 })
         )
       })
-      const input = cells[0].querySelector('textarea')!
-      expect(input.value).toBe('$x^2$')
+      const input = cells[0].querySelector<HTMLElement>('.cm-content')!
+      expect(input.textContent).toBe('$x^2$')
       act(() => {
         input.dispatchEvent(
           new KeyboardEvent('keydown', { bubbles: true, key })
         )
       })
-      expect(cells[0].querySelector('textarea')).toBeNull()
+      expect(cells[0].querySelector('.cm-editor')).toBeNull()
       expect(cells[0].querySelector('.table-generator-cell-render')).not.toBeNull()
     }
   )
@@ -206,8 +206,8 @@ describe('TabularWidget', () => {
         new MouseEvent('mouseup', { bubbles: true, button: 0 })
       )
     })
-    act(() => cells[0].querySelector<HTMLTextAreaElement>('textarea')!.blur())
-    expect(cells[0].querySelector('textarea')).toBeNull()
+    act(() => cells[0].querySelector<HTMLElement>('.cm-content')!.blur())
+    expect(cells[0].querySelector('.cm-editor')).toBeNull()
     expect(cells[0].querySelector('.table-generator-cell-render')).not.toBeNull()
   })
 
@@ -221,7 +221,7 @@ describe('TabularWidget', () => {
         new MouseEvent('mouseup', { bubbles: true, button: 0 })
       )
     })
-    expect(cells[0].querySelector('textarea')).toBeNull()
+    expect(cells[0].querySelector('.cm-editor')).toBeNull()
   })
 
   it('routes global shortcuts only to the active table', () => {
@@ -478,7 +478,7 @@ describe('TabularWidget', () => {
       })
       act(() => {
         cell
-          .querySelector<HTMLTextAreaElement>('textarea')!
+          .querySelector<HTMLElement>('.cm-content')!
           .dispatchEvent(
             new KeyboardEvent('keydown', { bubbles: true, key: 'Escape' })
           )
