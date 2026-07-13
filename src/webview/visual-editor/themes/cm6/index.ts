@@ -1,63 +1,53 @@
-import { EditorView } from '@codemirror/view'
 import { syntaxHighlighting } from '@codemirror/language'
-import { tagHighlighter, tags } from '@lezer/highlight'
 import type { Extension } from '@codemirror/state'
+import { EditorView } from '@codemirror/view'
+import { tagHighlighter, tags } from '@lezer/highlight'
 
-type ThemeData = {
-  theme: Parameters<typeof EditorView.theme>[0]
-  highlightStyle: Parameters<typeof EditorView.theme>[0]
-  dark: boolean
-}
-
-// Copied from Overleaf's generated CodeMirror 6 themes.
-const overleafLight: ThemeData = {
-  theme: {
-    '.cm-gutters': { backgroundColor: 'transparent', borderRightColor: 'transparent', background: '#f0f0f0', color: '#333' },
-    '&': { backgroundColor: '#FFFFFF', color: 'black' },
-    '.cm-cursor, .cm-dropCursor': { color: 'black' },
-    '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection, .cm-searchMatch.cm-searchMatch.cm-searchMatch-selected': { background: 'rgb(181, 213, 255)' },
-    '&.cm-focused .cm-matchingBracket, &.cm-focused .cm-nonmatchingBracket': { outline: '1px solid #5A5CAD', margin: 0 },
-    '.cm-activeLine': { background: 'rgba(0, 0, 0, 0.07)' },
-    '.cm-activeLineGutter': { backgroundColor: '#dcdcdc' },
-    '.cm-selectionMatch.cm-selectionMatch, .cm-searchMatch.cm-searchMatch': { background: 'rgba(250, 250, 255, 0.5)', outline: '1px solid rgb(200, 200, 250)', margin: 0 },
-    '.cm-foldPlaceholder': { backgroundColor: '#6B72E6' },
-  },
-  highlightStyle: {
-    '.tok-comment': { color: '#0080FF', fontStyle: 'italic' },
-    '.tok-typeName, .tok-keyword, .tok-labelName': { color: '#3F7F7F' },
-    '.tok-attributeValue, .tok-string, .tok-number': { color: '#5A5CAD' },
-  },
-  dark: false,
-}
-
-const overleafDark: ThemeData = {
-  theme: {
-    '.cm-gutters': { backgroundColor: 'transparent', borderRightColor: 'transparent', background: '#1b222c', color: 'rgb(144,145,148)' },
-    '&': { backgroundColor: '#1b222c', color: '#f8f8f2' },
-    '.cm-cursor, .cm-dropCursor': { color: '#f8f8f0' },
-    '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection, .cm-searchMatch.cm-searchMatch.cm-searchMatch-selected': { background: '#44475a' },
-    '&.cm-focused .cm-matchingBracket, &.cm-focused .cm-nonmatchingBracket': { margin: 0, outline: '1px solid #a29709' },
-    '.cm-activeLine, .cm-activeLineGutter': { background: '#44475a' },
-    '.cm-selectionMatch.cm-selectionMatch, .cm-searchMatch.cm-searchMatch': { boxShadow: '0px 0px 0px 1px inset #a29709', borderRadius: '3px', margin: 0 },
-    '.cm-foldPlaceholder': { backgroundColor: '#50fa7b', borderColor: '#f8f8f2' },
-  },
-  highlightStyle: {
-    '.tok-keyword, .tok-literal, .tok-tagName': { color: '#ff79c6' },
-    '.tok-typeName': { color: '#8be9fd', fontStyle: 'italic' },
-    '.tok-invalid': { color: '#F8F8F0', backgroundColor: '#ff79c6' },
-    '.tok-string': { color: '#f1fa8c' },
-    '.tok-comment': { color: '#6272a4' },
-    '.tok-attributeValue': { color: '#ffb86c', fontStyle: 'italic' },
-    '.tok-attributeName, .tok-function': { color: '#50fa7b' },
-  },
-  dark: true,
-}
-
-const vscodeEditorBackground = EditorView.theme({
+/**
+ * CodeMirror does not receive VS Code's TextMate token colors in a webview.
+ * Avoid supplying a second, fixed syntax palette so all visual-editor content
+ * inherits the active VS Code editor colors instead.
+ */
+const vscodeEditorTheme = {
   '&.cm-editor': {
     backgroundColor: 'var(--vscode-editor-background)',
+    color: 'var(--vscode-editor-foreground)',
   },
-})
+  '.cm-gutters': {
+    backgroundColor: 'var(--vscode-editorGutter-background)',
+    color: 'var(--vscode-editorLineNumber-foreground)',
+    borderRightColor: 'var(--vscode-editorGutter-border)',
+  },
+  '.cm-cursor, .cm-dropCursor': {
+    color: 'var(--vscode-editorCursor-foreground)',
+  },
+  '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
+    backgroundColor: 'var(--vscode-editor-selectionBackground)',
+  },
+  '&.cm-focused .cm-matchingBracket, &.cm-focused .cm-nonmatchingBracket': {
+    outline: '1px solid var(--vscode-editorBracketMatch-border)',
+    backgroundColor: 'var(--vscode-editorBracketMatch-background)',
+    margin: 0,
+  },
+  '.cm-activeLine, .cm-activeLineGutter': {
+    backgroundColor: 'var(--vscode-editor-lineHighlightBackground)',
+  },
+  '.cm-selectionMatch.cm-selectionMatch, .cm-searchMatch.cm-searchMatch': {
+    backgroundColor: 'var(--vscode-editor-findMatchHighlightBackground)',
+    outline: '1px solid var(--vscode-editor-findMatchHighlightBorder)',
+    margin: 0,
+  },
+  '.cm-foldPlaceholder': {
+    backgroundColor: 'var(--vscode-editor-foldBackground)',
+    borderColor: 'var(--vscode-editor-foreground)',
+  },
+}
+
+function syntaxTheme(colors: Record<string, string> = {}) {
+  return Object.fromEntries(
+    Object.entries(colors).map(([token, color]) => [`.tok-${token}`, { color }])
+  )
+}
 
 export const themeClassHighlighter = syntaxHighlighting(
   tagHighlighter([
@@ -82,6 +72,7 @@ export const themeClassHighlighter = syntaxHighlighting(
     { tag: tags.className, class: 'tok-className' },
     { tag: tags.macroName, class: 'tok-macroName' },
     { tag: tags.propertyName, class: 'tok-propertyName' },
+    { tag: tags.function(tags.variableName), class: 'tok-function' },
     { tag: tags.operator, class: 'tok-operator' },
     { tag: tags.comment, class: 'tok-comment' },
     { tag: tags.meta, class: 'tok-meta' },
@@ -91,11 +82,12 @@ export const themeClassHighlighter = syntaxHighlighting(
   ])
 )
 
-export function editorTheme(dark: boolean): Extension {
-  const { theme, highlightStyle } = dark ? overleafDark : overleafLight
+export function editorTheme(
+  dark: boolean,
+  syntaxColors: Record<string, string>
+): Extension {
   return [
-    EditorView.theme(theme, { dark }),
-    EditorView.theme(highlightStyle, { dark }),
-    vscodeEditorBackground,
+    EditorView.theme(vscodeEditorTheme, { dark }),
+    EditorView.theme(syntaxTheme(syntaxColors), { dark }),
   ]
 }
