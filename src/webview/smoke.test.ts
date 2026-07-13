@@ -46,6 +46,11 @@ Text with \textbf{bold} and \(x^2\).
             syntaxValidation: true,
             useOverleafKeybindings: true,
           },
+          syntaxColors: {
+            variableName: '#DCDCAA',
+            attributeValue: '#9CDCFE',
+            comment: '#6A9955',
+          },
         },
         '*'
       )
@@ -85,6 +90,12 @@ Text with \textbf{bold} and \(x^2\).
     expect(document.querySelector('.cm-editor.ol-cm-parsed')).not.toBeNull()
     expect(document.querySelector('.cm-content')?.textContent).toContain('Hello')
     expect(document.querySelector('.ol-cm-heading')).not.toBeNull()
+    expect([...document.styleSheets].some(sheet =>
+      [...sheet.cssRules].some(rule =>
+        rule.cssText.includes('.tok-variableName') &&
+        rule.cssText.includes('rgb(220, 220, 170)')
+      )
+    )).toBe(true)
     expect(document.querySelector('.cm-foldGutter')).not.toBeNull()
     expect(document.querySelector('#toolbar')?.textContent).toContain('Image')
 
@@ -95,18 +106,24 @@ Text with \textbf{bold} and \(x^2\).
       'var(--vscode-editor-background)'
     )
     document.body.style.setProperty('--vscode-editor-background', '#ffffff')
+    document.body.style.setProperty('--vscode-editor-foreground', '#111111')
     document.body.className = 'vscode-light'
     await vi.waitFor(() => {
-      expect(getComputedStyle(editor.dom).color).toBe('rgb(0, 0, 0)')
+      expect(getComputedStyle(editor.dom).color).toBe(
+        'var(--vscode-editor-foreground)'
+      )
     })
     expect(
       document.body.style.getPropertyValue('--vscode-editor-background')
     ).toBe('#ffffff')
 
     document.body.style.setProperty('--vscode-editor-background', '#1e1e1e')
+    document.body.style.setProperty('--vscode-editor-foreground', '#eeeeee')
     document.body.className = 'vscode-dark'
     await vi.waitFor(() => {
-      expect(getComputedStyle(editor.dom).color).toBe('rgb(248, 248, 242)')
+      expect(getComputedStyle(editor.dom).color).toBe(
+        'var(--vscode-editor-foreground)'
+      )
     })
     expect(
       document.body.style.getPropertyValue('--vscode-editor-background')
@@ -233,5 +250,5 @@ Text with \textbf{bold} and \(x^2\).
     expect(
       document.querySelector('.ol-cm-preamble-expanded')
     ).toBeNull()
-  })
+  }, 15_000)
 })

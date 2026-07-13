@@ -12,25 +12,15 @@ import {
 import { closeBracketConfig } from './close-bracket-config'
 import { noSpellCheckProp } from '../../utils/node-props'
 
-const styleOverrides: Record<string, any> = {
-  DocumentClassCtrlSeq: t.keyword,
-  UsePackageCtrlSeq: t.keyword,
-  CiteCtrlSeq: t.keyword,
-  CiteStarrableCtrlSeq: t.keyword,
-  RefCtrlSeq: t.keyword,
-  RefStarrableCtrlSeq: t.keyword,
-  LabelCtrlSeq: t.keyword,
-  GlossaryReferenceCtrlSeq: t.keyword,
-  GlossaryDisplayCtrlSeq: t.keyword,
-}
-
 const styleEntry = (token: string, defaultStyle: any) => {
-  return [token, styleOverrides[token] || defaultStyle]
+  return [token, defaultStyle]
 }
 
 const Styles = {
   ctrlSeq: Object.fromEntries(
-    Tokens.ctrlSeq.map(token => styleEntry(token, t.tagName))
+    // The grammar's control-sequence nodes are names. Map them to the same
+    // CodeMirror tag used by the TextMate command scope below.
+    Tokens.ctrlSeq.map(token => styleEntry(token, t.variableName))
   ),
   ctrlSym: Object.fromEntries(
     Tokens.ctrlSym.map(token => styleEntry(token, t.literal))

@@ -125,6 +125,7 @@ let metadata: WorkspaceMetadata = {
   environments: [],
 }
 let useOverleafKeybindings = true
+let syntaxColors: Record<string, string> = {}
 // Match LaTeX Workshop's reverse-SyncTeX editor decoration lifetime.
 const reverseSyncHighlightDuration = 500
 const setReverseSyncHighlight = StateEffect.define<{
@@ -204,6 +205,7 @@ window.addEventListener('message', event => {
       hostVersion = message.version
       metadata = message.metadata
       useOverleafKeybindings = message.configuration.useOverleafKeybindings
+      syntaxColors = message.syntaxColors ?? {}
       if (!view) {
         createEditor(
           message.text,
@@ -237,6 +239,10 @@ window.addEventListener('message', event => {
           ),
         })
       }
+      break
+    case 'syntaxColorsChanged':
+      syntaxColors = message.syntaxColors
+      applySelectedTheme()
       break
     case 'resourceResolved': {
       const resourcePath = pendingResources.get(message.requestId)
@@ -366,7 +372,7 @@ function createEditor(
       visualHighlightStyle,
       themeClassHighlighter,
       visualTheme,
-      selectedTheme.of(editorTheme(isDarkTheme())),
+      selectedTheme.of(editorTheme(isDarkTheme(), syntaxColors)),
       tableGeneratorTheme,
       mousedown,
       listItemMarker,
@@ -607,7 +613,7 @@ function isDarkTheme(): boolean {
 }
 
 /**
- * Keeps the synchronized Overleaf theme aligned with VS Code.
+ * Reconfigures CodeMirror's dark-mode class when the VS Code theme kind changes.
  */
 function observeColorTheme(): void {
   let dark = isDarkTheme()
@@ -691,7 +697,7 @@ function refreshVisualDecorations(): void {
 function applySelectedTheme(): void {
   if (!view) return
   view.dispatch({
-    effects: selectedTheme.reconfigure(editorTheme(isDarkTheme())),
+    effects: selectedTheme.reconfigure(editorTheme(isDarkTheme(), syntaxColors)),
   })
 }
 

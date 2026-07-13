@@ -23,6 +23,7 @@ import {
   storeViewState,
 } from './editorViewState'
 import { buildWithLatexWorkshop } from './latexWorkshop'
+import { getThemeTokenColors } from './themeTokenColors'
 import { WorkspaceMetadataIndex } from './workspaceMetadata'
 
 export const VISUAL_EDITOR_VIEW_TYPE = 'latexVisualEditor.editor'
@@ -100,6 +101,7 @@ export class LatexVisualEditorProvider implements vscode.CustomTextEditorProvide
         documentUri: document.uri.toString(),
         metadata: metadataIndex.current,
         configuration: this.configuration,
+        syntaxColors: getThemeTokenColors(),
         focusEditor,
         selection: mapSelectionToWebview(
           document.getText(),
@@ -134,6 +136,9 @@ export class LatexVisualEditorProvider implements vscode.CustomTextEditorProvide
             type: 'overleafKeybindingsChanged',
             enabled: this.configuration.useOverleafKeybindings,
           })
+        }
+        if (event.affectsConfiguration('workbench.colorTheme')) {
+          void post({ type: 'syntaxColorsChanged', syntaxColors: getThemeTokenColors() })
         }
       })
 

@@ -23,6 +23,7 @@ export type HostToWebviewMessage =
       documentUri: string
       metadata: WorkspaceMetadata
       configuration: EditorConfiguration
+      syntaxColors: Record<string, string>
       focusEditor?: boolean
       selection?: { anchor: number; head: number }
       viewState?: {
@@ -34,6 +35,7 @@ export type HostToWebviewMessage =
   | { type: 'documentChanged'; text: string; version: number }
   | { type: 'metadataChanged'; metadata: WorkspaceMetadata }
   | { type: 'overleafKeybindingsChanged'; enabled: boolean }
+  | { type: 'syntaxColorsChanged'; syntaxColors: Record<string, string> }
   | {
       type: 'command'
       command:
