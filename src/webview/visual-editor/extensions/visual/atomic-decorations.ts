@@ -1113,19 +1113,30 @@ export const atomicDecorations = (options: Options) => {
           // markup that can be toggled using toolbar buttons/keyboard shortcuts
           const textArgumentNode = nodeRef.node.getChild('TextArgument')
           const argumentText = textArgumentNode?.getChild('LongArg')
-          const shouldShowBraces =
-            !shouldDecorate(state, nodeRef) ||
-            argumentText?.from === argumentText?.to
           const isQuote = nodeRef.type.is('SayCommand')
-          decorations.push(
-            ...decorateArgumentBraces(
-              new BraceWidget(shouldShowBraces ? '{' : isQuote ? '“' : ''),
-              textArgumentNode,
-              nodeRef.from,
-              true,
-              new BraceWidget(shouldShowBraces ? '}' : isQuote ? '”' : '')
+          if (shouldDecorate(state, nodeRef)) {
+            decorations.push(
+              ...decorateArgumentBraces(
+                new BraceWidget(
+                  argumentText?.from === argumentText?.to
+                    ? '{'
+                    : isQuote
+                      ? '“'
+                      : ''
+                ),
+                textArgumentNode,
+                nodeRef.from,
+                true,
+                new BraceWidget(
+                  argumentText?.from === argumentText?.to
+                    ? '}'
+                    : isQuote
+                      ? '”'
+                      : ''
+                )
+              )
             )
-          )
+          }
         } else if (nodeRef.type.is('$OtherTextFormattingCommand')) {
           // markup that can't be toggled using toolbar buttons/keyboard shortcuts
           const textArgumentNode = nodeRef.node.getChild('TextArgument')
