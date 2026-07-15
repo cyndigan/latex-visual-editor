@@ -708,24 +708,22 @@ export const atomicDecorations = (options: Options) => {
           return false // no markup in cite content
         } else if (nodeRef.type.is('Ref')) {
           // \ref command with a ref label argument
+          if (shouldDecorate(state, nodeRef)) {
+            const argumentNode = nodeRef.node
+              .getChild('RefArgument')
+              ?.getChild('ShortTextArgument')
 
-          const argumentNode = nodeRef.node
-            .getChild('RefArgument')
-            ?.getChild('ShortTextArgument')
-
-          const shouldShowBraces =
-            !shouldDecorate(state, nodeRef) ||
-            argumentNode?.from === argumentNode?.to
-
-          decorations.push(
-            ...decorateArgumentBraces(
-              new IconBraceWidget(shouldShowBraces ? '🏷{' : '🏷'),
-              argumentNode,
-              nodeRef.from,
-              true,
-              new BraceWidget(shouldShowBraces ? '}' : '')
+            const isEmpty = argumentNode?.from === argumentNode?.to
+            decorations.push(
+              ...decorateArgumentBraces(
+                new IconBraceWidget(isEmpty ? '🏷{' : '🏷'),
+                argumentNode,
+                nodeRef.from,
+                true,
+                new BraceWidget(isEmpty ? '}' : '')
+              )
             )
-          )
+          }
 
           return false // no markup in ref content
         } else if (nodeRef.type.is('Label')) {
@@ -852,14 +850,13 @@ export const atomicDecorations = (options: Options) => {
           const contentNode = contentArgumentNode?.getChild('ShortArg')
 
           if (
+            shouldDecorate(state, nodeRef) &&
             urlArgumentNode &&
             urlNode &&
             contentArgumentNode &&
             contentNode
           ) {
-            const shouldShowBraces =
-              !shouldDecorate(state, nodeRef) ||
-              contentNode.from === contentNode.to
+            const shouldShowBraces = contentNode.from === contentNode.to
 
             const url = state.sliceDoc(urlNode.from, urlNode.to)
 
@@ -880,12 +877,9 @@ export const atomicDecorations = (options: Options) => {
           // a hyperlink with URL and content arguments
           const argumentNode = nodeRef.node.getChild('UrlArgument')
 
-          if (argumentNode) {
+          if (argumentNode && shouldDecorate(state, nodeRef)) {
             const contentNode = argumentNode.getChild('LiteralArgContent')
-
-            const shouldShowBraces =
-              !shouldDecorate(state, nodeRef) ||
-              contentNode?.from === contentNode?.to
+            const shouldShowBraces = contentNode?.from === contentNode?.to
 
             decorations.push(
               ...decorateArgumentBraces(
@@ -1034,6 +1028,7 @@ export const atomicDecorations = (options: Options) => {
           // only decorate \item inside a list
           if (currentListEnvironment) {
             currentOrdinal++
+            if (!shouldDecorate(state, nodeRef)) return
             const line = state.doc.lineAt(nodeRef.from)
             const onlySpaceBeforeNode = /^\s*$/.test(
               state.sliceDoc(line.from, nodeRef.from)
@@ -1059,15 +1054,13 @@ export const atomicDecorations = (options: Options) => {
 
               if (argumentNode) {
                 // decorate the optional argument
-                const decorateBrackets = shouldDecorate(state, argumentNode)
-
                 decorations.push(
                   ...decorateArgumentBraces(
-                    new BraceWidget(decorateBrackets ? '' : '['),
+                    new BraceWidget(''),
                     argumentNode,
                     argumentNode.from,
                     false,
-                    new BraceWidget(decorateBrackets ? '' : ']'),
+                    new BraceWidget(''),
                     { open: OpenBracket, close: CloseBracket }
                   )
                 )
