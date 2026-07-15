@@ -5,6 +5,7 @@ export type EditingCell = {
   cellIndex: number
   content: string
   initial: string
+  wrapper?: { prefix: string; suffix: string }
 }
 
 export type EditingContextValue = {

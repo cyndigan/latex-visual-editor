@@ -13,6 +13,7 @@ import {
 } from '../../../components/table-generator/utils'
 import { TableData } from '../../../components/table-generator/table-model'
 import { TabularWidget, renderTableCellContent } from './tabular'
+import { unwrapSingleTabular } from '../../../components/table-generator/rich-content'
 import { atomicDecorations } from '../atomic-decorations'
 import { markDecorations } from '../mark-decorations'
 
@@ -50,6 +51,16 @@ describe('renderTableCellContent', () => {
     expect(table?.querySelectorAll('tr')).toHaveLength(2)
     expect(element.textContent).toContain('Inner A')
     expect(element.textContent).toContain('Inner B')
+  })
+
+  it('unwraps a cell-wide tabular environment for editing without losing it', () => {
+    const source = String.raw`\begin{tabular}[c]{@{}l@{}}RMS: increases \\ Harmonics: 1$\times$ increases\end{tabular}`
+
+    expect(unwrapSingleTabular(source)).toEqual({
+      content: String.raw`RMS: increases \\ Harmonics: 1$\times$ increases`,
+      prefix: String.raw`\begin{tabular}[c]{@{}l@{}}`,
+      suffix: String.raw`\end{tabular}`,
+    })
   })
 })
 

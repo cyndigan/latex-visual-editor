@@ -11,6 +11,7 @@ import {
   type RefObject,
 } from 'react'
 import { TableSelection } from '../table-selection'
+import { unwrapSingleTabular } from '../rich-content'
 import {
   deleteTableSelectionChanges,
   pasteTableChanges,
@@ -133,12 +134,15 @@ export function TableInteractionProvider({
     if (!current) return
     editingRef.current = null
     setEditing(null)
-    if (view.state.readOnly || current.content === current.initial) return
+    const content = current.wrapper
+      ? `${current.wrapper.prefix}${current.content}${current.wrapper.suffix}`
+      : current.content
+    if (view.state.readOnly || content === current.initial) return
     const position = parsed.cellPositions[current.row]?.[current.cellIndex]
     if (!position) return
     keepExpanded()
     view.dispatch({
-      changes: { ...position, insert: current.content },
+      changes: { ...position, insert: content },
       userEvent: 'input',
     })
   }, [keepExpanded, parsed.cellPositions, view])
@@ -156,7 +160,17 @@ export function TableInteractionProvider({
     ) => {
       if (view.state.readOnly) return
       if (editingRef.current) commitEditing()
-      const next = { row, cellIndex, content: initial, initial: source }
+      const wrapper = unwrapSingleTabular(source)
+      const content = initial === source ? (wrapper?.content ?? source) : initial
+      const next = {
+        row,
+        cellIndex,
+        content,
+        initial: source,
+        wrapper: wrapper
+          ? { prefix: wrapper.prefix, suffix: wrapper.suffix }
+          : undefined,
+      }
       editingRef.current = next
       setEditing(next)
     },
