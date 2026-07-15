@@ -37,7 +37,17 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     LatexVisualEditorProvider.register(context, visualEditorProvider)
   )
-  void syncTexEditorAssociation(context)
+  const syncTexAssociationForDocument = (document: vscode.TextDocument) => {
+    if (document.uri.path.toLowerCase().endsWith('.tex')) {
+      void syncTexEditorAssociation(context)
+    }
+  }
+  context.subscriptions.push(
+    vscode.workspace.onDidOpenTextDocument(syncTexAssociationForDocument)
+  )
+  for (const document of vscode.workspace.textDocuments) {
+    syncTexAssociationForDocument(document)
+  }
   void installReverseSyncTeXHandler(async (record, data) => {
     const uri = vscode.Uri.file(record.input)
     const visualPanel = visualEditorProvider.getPanel(uri)
