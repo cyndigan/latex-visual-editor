@@ -97,6 +97,29 @@ export function typesetNodeIntoElement(
         from = childNode.from
       }
 
+      if (
+        childNode.type.is('GlossaryReference') ||
+        childNode.type.is('GlossaryDisplay')
+      ) {
+        const argument = childNode
+          .getChild('GlossaryArgument')
+          ?.getChild('ShortTextArgument')
+        const openBrace = argument?.getChild('OpenBrace')
+        const closeBrace = argument?.getChild('CloseBrace')
+
+        if (openBrace && closeBrace) {
+          const icon = document.createElement('span')
+          icon.classList.add('ol-cm-brace', 'ol-cm-icon-brace')
+          icon.textContent = '📖'
+          ancestor().append(icon)
+          ancestor().append(
+            document.createTextNode(getText(openBrace.to, closeBrace.from))
+          )
+          from = childNode.to
+          return false
+        }
+      }
+
       // commands defined in the grammar
       const markup = textFormattingMarkupMap.get(childNode.type.name)
       if (markup) {

@@ -38,6 +38,15 @@ describe('renderTableCellContent', () => {
     ).toBe('underline')
   })
 
+  it('renders glossary references with the dictionary icon', () => {
+    const element = document.createElement('div')
+
+    renderTableCellContent(String.raw`\glsentryshort{CWRU}`, element)
+
+    expect(element.textContent).toBe('📖CWRU')
+    expect(element.querySelector('.ol-cm-icon-brace')?.textContent).toBe('📖')
+  })
+
   it('renders nested tabular content as a table', () => {
     const element = document.createElement('div')
 

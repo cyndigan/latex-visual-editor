@@ -28,6 +28,23 @@ export const glossaryReferenceCommands = new Set([
     'userv',
     'uservi',
   ]),
+  ...withCaseVariants([
+    'entrytext',
+    'entryfirst',
+    'entryplural',
+    'entryfirstplural',
+    'entryname',
+    'entrydesc',
+    'entrydescplural',
+    'entrysymbol',
+    'entrysymbolplural',
+    'entryuseri',
+    'entryuserii',
+    'entryuseriii',
+    'entryuseriv',
+    'entryuserv',
+    'entryuservi',
+  ]),
   ...withAcronymCaseVariants([
     'short',
     'shortpl',
@@ -35,6 +52,14 @@ export const glossaryReferenceCommands = new Set([
     'longpl',
     'full',
     'fullpl',
+  ]),
+  ...withCaseVariants([
+    'entryshort',
+    'entryshortpl',
+    'entrylong',
+    'entrylongpl',
+    'entryfull',
+    'entryfullpl',
   ]),
 ])
 
