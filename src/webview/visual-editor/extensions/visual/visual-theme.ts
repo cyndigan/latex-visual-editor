@@ -330,6 +330,10 @@ const mainVisualTheme = EditorView.theme({
     paddingLeft: '14px',
     paddingRight: '14px',
   },
+  '.ol-cm-environment-verbatim .tok-string, .ol-cm-environment-lstlisting .tok-string, .ol-cm-environment-minted .tok-string':
+    {
+      color: 'inherit',
+    },
   '.ol-cm-environment-verbatim.ol-cm-environment-first-line, .ol-cm-environment-lstlisting.ol-cm-environment-first-line, .ol-cm-environment-minted.ol-cm-environment-first-line':
     {
     paddingTop: '0 !important',
